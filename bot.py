@@ -1,45 +1,45 @@
 #TODO: require quotes for summonerName parameters to prevent errors
 #TODO: Add commands help system
 #TODO: Fix region validation
-#TODO: Push to git
 #TODO: Add summoner object cache
-
+#TODO: Only privledged users (devs) can call turnOff method
+#TODO: Handle null bot command parameters
+#TODO: Rework Exception System
 
 import os
 import discord
 from discord.ext import commands
-import leagueScraper
+import leagueScraper as ls
 
 #Establish connection to discord client
 #Set command prefix to ! (exclamation mark)
 bot = commands.Bot(intents=discord.Intents.all(), command_prefix='!')
 
+#Termianl output when bot is ready for use
 @bot.event
 async def on_ready():
     print("Discord connection established")
 
+#Turn off bot via discord command
 @bot.command()
 async def turnOff(ctx):
     print("Disconnecting from Discord")
     await bot.close()
 
-#Command for getting summoner rank
-#Command triggerd by user typing "!rank summonerName summonerRegion"
-#Validates request, and runs getRank from leagueScraper if request is valid
 @bot.command()
-async def rank(ctx, name, region):
-    response = leagueScraper.getRank(name, region)
+async def Rank(ctx, name, region):
+    response = ls.command(name, region, ls.getRank)
 
     await ctx.send(response)
 
 @bot.command()
-async def winRate(ctx, name, region):
-    response = leagueScraper.getWinRate(name, region)
+async def Winrate(ctx, name, region):
+    response = ls.command(name, region, ls.getWinRate)
 
     await ctx.send(response)
 
 @bot.command()
-async def level(ctx, name, region):
-    response = leagueScraper.getLevel(name, region)
+async def Level(ctx, name, region):
+    response = ls.command(name, region, ls.getLevel)
 
     await ctx.send(response)
