@@ -10,7 +10,7 @@ def main():
     botToken = os.getenv('BOT_TOKEN')
 
     leagueScraper.init(apiKey)
-    bot.bot.run(botToken)
+    bot.client.run(botToken)
 
 if __name__ == "__main__":
     main()

@@ -8,38 +8,41 @@
 
 import os
 import discord
-from discord.ext import commands
+from discord import app_commands
 import leagueScraper as ls
 
-#Establish connection to discord client
-#Set command prefix to ! (exclamation mark)
-bot = commands.Bot(intents=discord.Intents.all(), command_prefix='!')
+#Define client and tree
+#Tree holds all application commands
+intents = discord.Intents.all()
+client = discord.Client(intents = intents)
+tree = app_commands.CommandTree(client)
 
-#Termianl output when bot is ready for use
-@bot.event
+#Terminal output when bot is ready for use
+@client.event
 async def on_ready():
+    await tree.sync()
     print("Discord connection established")
 
 #Turn off bot via discord command
-@bot.command()
-async def turnOff(ctx):
+@tree.command(name = "turnoff", description = "turn off the bot")
+async def turnoff(interaction: discord.Interaction):
     print("Disconnecting from Discord")
-    await bot.close()
+    await client.close()
 
-@bot.command()
-async def Rank(ctx, name, region):
+@tree.command(name = "rank", description = "Get a summoner's rank")
+async def rank(interaction: discord.Interaction, name: str, region: str):
     response = ls.command(name, region, ls.getRank)
 
-    await ctx.send(response)
+    await interaction.response.send_message(response)
 
-@bot.command()
-async def Winrate(ctx, name, region):
+@tree.command(name = "winrate", description = "Get a summoner's winrate")
+async def winrate(interaction: discord.Interaction, name: str, region: str):
     response = ls.command(name, region, ls.getWinRate)
 
-    await ctx.send(response)
+    await interaction.response.send_message(response)
 
-@bot.command()
-async def Level(ctx, name, region):
+@tree.command(name = "level", description = "Get a summoner's level")
+async def level(interaction: discord.Interaction, name: str, region: str):
     response = ls.command(name, region, ls.getLevel)
 
-    await ctx.send(response)
+    await interaction.response.send_message(response)
