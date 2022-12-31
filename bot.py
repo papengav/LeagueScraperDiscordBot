@@ -1,11 +1,3 @@
-#TODO: require quotes for summonerName parameters to prevent errors
-#TODO: Add commands help system
-#TODO: Fix region validation
-#TODO: Add summoner object cache
-#TODO: Only privledged users (devs) can call turnOff method
-#TODO: Handle null bot command parameters
-#TODO: Rework Exception System
-
 import os
 import discord
 from discord import app_commands
