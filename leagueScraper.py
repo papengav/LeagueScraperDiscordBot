@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 #Retrieved from env and initialized in init
 apiKey = None
 
-#regions stores valid regions invalidRegion stores static error message for when an invalid region is inputted, probably change this later
 regions = None
 superRegions = None
 americaSuperRegion = None
@@ -53,14 +52,6 @@ class Summoner:
 #Returns value of json element
 def getJsonElement(object, elementName):
     return object[elementName]
-
-def convertToJson(object):
-    object = object.json()
-
-    if type(object) is list:
-        object = object[0]
-    
-    return object
     
 #Parameters: url (complete url constructed in get methods)
 #Request data from Riot servers
@@ -252,8 +243,8 @@ def command(name, region, func):
         summonerV4Request = summonerV4ByName(name, region)
 
         if summonerV4Request.status_code == 200:
-            summonerV4Request = convertToJson(summonerV4Request)
-            leagueV4Request = convertToJson(leagueV4(summonerV4Request, region))
+            summonerV4Request = summonerV4Request.json()
+            leagueV4Request = leagueV4(summonerV4Request, region).json()[0]
             summoner = getSummoner(summonerV4Request, leagueV4Request)
 
             response = func(summoner)
