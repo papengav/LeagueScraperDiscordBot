@@ -9,6 +9,8 @@ intents = discord.Intents.all()
 client = discord.Client(intents = intents)
 tree = app_commands.CommandTree(client)
 
+devId = 394314328594972673
+
 #Terminal output when bot is ready for use
 @client.event
 async def on_ready():
@@ -18,8 +20,11 @@ async def on_ready():
 #Turn off bot via discord command
 @tree.command(name = "turnoff", description = "turn off the bot")
 async def turnoff(interaction: discord.Interaction):
-    print("Disconnecting from Discord")
-    await client.close()
+    if interaction.user.id == devId:
+        print("Disconnecting from Discord")
+        await client.close()
+    else:
+        await interaction.response.send_message("Unauthorized command")
 
 @tree.command(name = "rank", description = "Get a summoner's rank")
 async def rank(interaction: discord.Interaction, name: str, region: str):
