@@ -10,15 +10,30 @@ apiKey = None
 
 #regions stores valid regions invalidRegion stores static error message for when an invalid region is inputted, probably change this later
 regions = None
+superRegions = None
+americaSuperRegion = None
+asiaSuperRegion = None
+europeSuperRegion = None
+seaSuperRegion = None
 invalidRegion = None
 
 def init(key):
     global apiKey
     global regions
+    global superRegions
+    global americaSuperRegion
+    global asiaSuperRegion
+    global europeSuperRegion
+    global seaSuperRegion
     global invalidRegion 
 
     apiKey = key
     regions = ["br1", "eun1", "euw1", "jp1", "kr", "la1", "la2", "na1", "oc1", "tr1", "ru"]
+    superRegions = ["americas", "asia", "europe", "sea"]
+    americaSuperRegion = ["br1", "la1", "la2", "na1"]
+    asiaSuperRegion = ["jp1", "kr", "tr1"]
+    europeSuperRegion = ["eun1", "euw1", "ru"]
+    seaSuperRegion = ["oc1"]
     invalidRegion= "Please submit a valid region", *regions
 
 #Class to store summoner information
@@ -137,8 +152,22 @@ def errorHandler(code):
 
     return response
     
+def getSuperRegion(region):
+    superRegion = None
 
-#Requests Riot API SUMMONER-V4 by Summoner Name
+    if region in americaSuperRegion:
+        superRegion = "americas"
+    elif region in asiaSuperRegion:
+        superRegion = "asia"
+    elif region in europeSuperRegion:
+        superRegion = "europe"
+    elif region in seaSuperRegion:
+        superRegion = "sea"
+
+    return superRegion
+
+
+#Requests Riot API SUMMONER-V4 by Summoner Name - a DTO of in game summoner info
 def summonerV4ByName(summonerName, region):
     url = "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}?api_key={apiKey}".format(
     region = region,
@@ -147,7 +176,7 @@ def summonerV4ByName(summonerName, region):
 
     return sendRequest(url)
 
-#Requests Riot API SUMMONER-V4 by PUUID
+#Requests Riot API SUMMONER-V4 by PUUID - a DTO of in game summoner info
 def summonerV4ByPuuid(summonerPuuid, region):
     url = "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{summonerPuuid}?api_key={apiKey}".format(
         region = region,
@@ -156,13 +185,23 @@ def summonerV4ByPuuid(summonerPuuid, region):
 
     return sendRequest(url)
 
-#Requests Riot API LEAGUE-V4
+#Requests Riot API LEAGUE-V4 - a DTO of summoner account info
 def leagueV4(summoner, region):
     summonerId = getJsonElement(summoner, "id")
     url = "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summonerId}?api_key={apiKey}".format(
     region = region,
     summonerId = summonerId,
     apiKey = apiKey)
+
+    return sendRequest(url)
+
+#Requests Riot API MATCH-V5 - a List[string] of match ids
+def MatchV5ByPuuid(summonerPuuid, region):
+    superRegion = getSuperRegion(region)
+    url = "https://{superRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/{summonerPuuid}/ids?api_key={apiKey}".format(
+        superRegion = superRegion,
+        summonerPuuid = summonerPuuid,
+        apiKey = apiKey)
 
     return sendRequest(url)
 
