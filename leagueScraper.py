@@ -37,9 +37,10 @@ def init(key):
 
 #Class to store summoner information
 class Summoner:
-    def __init__(self, id, puuid, name, level, tier, rank, lp, wins, losses):
+    def __init__(self, id, puuid, iconId, name, level, tier, rank, lp, wins, losses):
         self.id = id
         self.puuid = puuid
+        self.iconId = iconId
         self.name = name
         self.level = level
         self.tier = tier
@@ -201,6 +202,7 @@ def MatchV5ByPuuid(summonerPuuid, region):
 def getSummoner(summonerV4, leagueV4):
     id = getJsonElement(leagueV4, "summonerId")
     puuid = getJsonElement(summonerV4, "puuid")
+    iconId = getJsonElement(summonerV4, "profileIconId")
     name = getJsonElement(leagueV4, "summonerName")
     level = getJsonElement(summonerV4, "summonerLevel")
     tier = getJsonElement(leagueV4, "tier")
@@ -209,7 +211,7 @@ def getSummoner(summonerV4, leagueV4):
     wins = getJsonElement(leagueV4, "wins")
     losses = getJsonElement(leagueV4, "losses")
 
-    summoner = Summoner(id, puuid, name, level, tier, rank, lp, wins, losses)
+    summoner = Summoner(id, puuid, iconId, name, level, tier, rank, lp, wins, losses)
 
     return summoner
 
