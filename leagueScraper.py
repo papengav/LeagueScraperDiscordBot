@@ -23,8 +23,9 @@ def init(key):
 
 #Class to store summoner information
 class Summoner:
-    def __init__(self, id, name, level, tier, rank, lp, wins, losses):
+    def __init__(self, id, puuid, name, level, tier, rank, lp, wins, losses):
         self.id = id
+        self.puuid = puuid
         self.name = name
         self.level = level
         self.tier = tier
@@ -67,7 +68,7 @@ def requestIsValid(name, region):
         if regionFound == False:
             raise RequestExceptions.InvalidRegion
         
-        summoner = summonerV4(name, region)
+        summoner = summonerV4ByName(name, region)
 
         if "accountId" not in summoner:
             raise RequestExceptions.SummonerDoesNotExist
@@ -137,12 +138,21 @@ def errorHandler(code):
     return response
     
 
-#Requests Riot API SUMMONER-V4
-def summonerV4(summonerName, region):
+#Requests Riot API SUMMONER-V4 by Summoner Name
+def summonerV4ByName(summonerName, region):
     url = "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}?api_key={apiKey}".format(
     region = region,
     summonerName = summonerName,
     apiKey = apiKey)
+
+    return sendRequest(url)
+
+#Requests Riot API SUMMONER-V4 by PUUID
+def summonerV4ByPuuid(summonerPuuid, region):
+    url = "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{summonerPuuid}?api_key={apiKey}".format(
+        region = region,
+        summonerPuuid = summonerPuuid,
+        apiKey = apiKey)
 
     return sendRequest(url)
 
@@ -160,6 +170,7 @@ def leagueV4(summoner, region):
 #Creates Summoner object for any data request regarding a summoner
 def getSummoner(summonerV4, leagueV4):
     id = getJsonElement(leagueV4, "summonerId")
+    puuid = getJsonElement(summonerV4, "puuid")
     name = getJsonElement(leagueV4, "summonerName")
     level = getJsonElement(summonerV4, "summonerLevel")
     tier = getJsonElement(leagueV4, "tier")
@@ -168,7 +179,7 @@ def getSummoner(summonerV4, leagueV4):
     wins = getJsonElement(leagueV4, "wins")
     losses = getJsonElement(leagueV4, "losses")
 
-    summoner = Summoner(id, name, level, tier, rank, lp, wins, losses)
+    summoner = Summoner(id, puuid, name, level, tier, rank, lp, wins, losses)
 
     return summoner
 
@@ -199,7 +210,7 @@ def command(name, region, func):
     response = None
 
     if regionIsValid:
-        summonerV4Request = summonerV4(name, region)
+        summonerV4Request = summonerV4ByName(name, region)
 
         if summonerV4Request.status_code == 200:
             summonerV4Request = convertToJson(summonerV4Request)
