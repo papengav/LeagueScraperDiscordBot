@@ -108,6 +108,16 @@ def MatchV5ByPuuid(summonerPuuid, region):
 
     return requests.get(url)
 
+#Requests Riot API MATCH-V5 - A DTO of exhaustive match info
+def MatchV5ByMatchId(matchId, region):
+    superRegion = getSuperRegion(region)
+    url = "https://{superRegion}.api.riotgames.com/lol/match/v5/matches/{matchId}?api_key={apiKey}".format(
+        superRegion = superRegion,
+        matchId = matchId,
+        apiKey = apiKey)
+
+    return requests.get(url)
+
 def getRank(summoner):
     return "{name} is {tier} {rank} with {lp} lp!".format(
     name = summoner.name,
@@ -118,7 +128,7 @@ def getRank(summoner):
 def getWinRate(summoner):
     winRate = round(100 * (summoner.wins / (summoner.wins + summoner.losses)))
 
-    return "{name} has {wins} wins and {losses} losses, giving them a winrate of {wr}%".format(
+    return "{name} has {wins} wins and {losses} losses, giving them a winrate of {wr}% ".format(
     name = summoner.name,
     wins = summoner.wins,
     losses = summoner.losses,
