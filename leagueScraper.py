@@ -1,6 +1,5 @@
 import requests
 import json
-import RequestExceptions
 import os
 from dotenv import load_dotenv
 
@@ -61,33 +60,6 @@ def sendRequest(url):
     
     return response
 
-#Parameters: name (name of summoner) region (region of summoner)
-#Checks if summoner and region exists returns "valid" if both are true
-#If either does not exist, returns a cooresponding error message 
-def requestIsValid(name, region):
-    response = "valid"
-    try:
-        regionFound = False
-
-        if region in regions:
-            regionFound = True
-
-        if regionFound == False:
-            raise RequestExceptions.InvalidRegion
-        
-        summoner = summonerV4ByName(name, region)
-
-        if "accountId" not in summoner:
-            raise RequestExceptions.SummonerDoesNotExist
-
-    except RequestExceptions.InvalidRegion:
-        response = invalidRegion
-    except RequestExceptions.SummonerDoesNotExist:
-        response = "Summoner does not exist."
-
-    return response
-
-
 def validateRegion(region):
     isValid = False
 
@@ -95,55 +67,8 @@ def validateRegion(region):
         isValid = True
 
     return isValid
-
-def errorHandler(code):
-    response = None
-
-    try:
-        if code == 400:
-            raise RequestExceptions.BadRequest
-        elif code == 401:
-            raise RequestExceptions.Unauthorized
-        elif code == 403:
-            raise RequestExceptions.Forbidden
-        elif code == 404:
-            raise RequestExceptions.DataNotFound
-        elif code == 405:
-            raise RequestExceptions.MethodNotAllowed
-        elif code == 415:
-            raise RequestExceptions.UnsupportedMediaType
-        elif code == 429:
-            raise RequestExceptions.RateLimitExceeded
-        elif code == 500:
-            raise RequestExceptions.InternalServerError
-        elif code == 504:
-            raise RequestExceptions.GatewayTimeout
-
-    except RequestExceptions.BadRequest:
-        response = "Status Code 400"
-    except RequestExceptions.Unauthorized:
-        response = "Status code 401"
-    except RequestExceptions.Forbidden:
-        response = "Status code 403"
-    except RequestExceptions.DataNotFound:
-        response = "Summoner not found"
-    except RequestExceptions.MethodNotAllowed:
-        response = "Status code 405"
-    except RequestExceptions.UnsupportedMediaType:
-        response = "Status code 415"
-    except RequestExceptions.RateLimitExceeded:
-        response = "Status code 429"
-    except RequestExceptions.InternalServerError:
-        response = "Status code 500"
-    except RequestExceptions.BadGateway:
-        response = "Status code 502"
-    except RequestExceptions.ServiceUnavailable:
-        response = "Status code 503"
-    except RequestExceptions.GatewayTimeout:
-        response = "Status Code 504"
-
-    return response
     
+#Determine which Super Region an inputed region exists within
 def getSuperRegion(region):
     superRegion = None
 
@@ -236,6 +161,7 @@ def getLevel(summoner):
     name = summoner.name,
     level = summoner.level)
 
+#Generalized function all interactions pass through. Invokes API methods to construct a summoner object, then passes off object to desired command.
 def command(name, region, func):
     regionIsValid = validateRegion(region)
     summonerV4Request = None
@@ -251,7 +177,7 @@ def command(name, region, func):
 
             response = func(summoner)
         else:
-            response = errorHandler(summonerV4Request.status_code)
+            response = getJsonElement(summonerV4Request, "message")
     else: 
         response = invalidRegion
 
