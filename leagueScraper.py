@@ -1,4 +1,5 @@
 import requests
+from urllib.parse import quote
 
 #Dev Key for Riot API
 #Retrieved from env and initialized in init
@@ -151,6 +152,7 @@ def command(name, region, func):
     regionIsValid = validateRegion(region)
     summonerV4Request = None
     response = None
+    name = quote(name, safe = ' ')
 
     if regionIsValid:
         summonerV4Request = summonerV4ByName(name, region)
