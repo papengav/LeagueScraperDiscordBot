@@ -25,7 +25,7 @@ async def turnoff(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("Unauthorized command")
 
-@tree.command(name = "rank", description = "Get a summoner's rank")
+@tree.command(name = "rank", description = "Get a summoner's rank in their highest gamemode")
 async def rank(interaction: discord.Interaction, name: str, region: str):
     response = ls.command(name, region, ls.getRank)
 

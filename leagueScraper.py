@@ -40,6 +40,10 @@ class Summoner:
         self.iconId = summonerV4["profileIconId"]
         self.name = leagueV4["summonerName"]
         self.level = summonerV4["summonerLevel"]
+        if leagueV4["queueType"] == "RANKED_FLEX_SR":
+            self.queueType = "Ranked Flex"
+        else:
+            self.queueType = "Ranked Solo/Duo"
         self.tier = leagueV4["tier"]
         self.rank = leagueV4["rank"]
         self.lp = leagueV4["leaguePoints"]
@@ -119,11 +123,12 @@ def MatchV5ByMatchId(matchId, region):
     return requests.get(url)
 
 def getRank(summoner):
-    return "{name} is {tier} {rank} with {lp} lp!".format(
+    return "{name} is {tier} {rank} with {lp} lp in {queueType}".format(
     name = summoner.name,
     tier = summoner.tier,
     rank = summoner.rank,
-    lp = summoner.lp)
+    lp = summoner.lp,
+    queueType = summoner.queueType)
 
 def getWinRate(summoner):
     winRate = round(100 * (summoner.wins / (summoner.wins + summoner.losses)))
