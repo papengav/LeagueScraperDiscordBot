@@ -162,7 +162,7 @@ def command(name, region, func):
 
             response = func(summoner)
         else:
-            response = summonerV4Request["message"]
+            response = summonerV4Request.json()["status"]["message"]
     else: 
         response = invalidRegion
 
