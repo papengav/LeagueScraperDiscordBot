@@ -34,17 +34,17 @@ def init(key):
 
 #Class to store summoner information
 class Summoner:
-    def __init__(self, id, puuid, iconId, name, level, tier, rank, lp, wins, losses):
-        self.id = id
-        self.puuid = puuid
-        self.iconId = iconId
-        self.name = name
-        self.level = level
-        self.tier = tier
-        self.rank = rank
-        self.lp = lp
-        self.wins = wins
-        self.losses = losses
+    def __init__(self, summonerV4, leagueV4):
+        self.id = leagueV4["summonerId"]
+        self.puuid = summonerV4["puuid"]
+        self.iconId = summonerV4["profileIconId"]
+        self.name = leagueV4["summonerName"]
+        self.level = summonerV4["summonerLevel"]
+        self.tier = leagueV4["tier"]
+        self.rank = leagueV4["rank"]
+        self.lp = leagueV4["leaguePoints"]
+        self.wins = leagueV4["wins"]
+        self.losses = leagueV4["losses"]
 
 def validateRegion(region):
     isValid = False
@@ -108,24 +108,6 @@ def MatchV5ByPuuid(summonerPuuid, region):
 
     return requests.get(url)
 
-#Parameters: name (name of the summoner), region (region of the summoner)
-#Creates Summoner object for any data request regarding a summoner
-def getSummoner(summonerV4, leagueV4):
-    id = leagueV4["summonerId"]
-    puuid = summonerV4["puuid"]
-    iconId = summonerV4["profileIconId"]
-    name = leagueV4["summonerName"]
-    level = summonerV4["summonerLevel"]
-    tier = leagueV4["tier"]
-    rank = leagueV4["rank"]
-    lp = leagueV4["leaguePoints"]
-    wins = leagueV4["wins"]
-    losses = leagueV4["losses"]
-
-    summoner = Summoner(id, puuid, iconId, name, level, tier, rank, lp, wins, losses)
-
-    return summoner
-
 def getRank(summoner):
     return "{name} is {tier} {rank} with {lp} lp!".format(
     name = summoner.name,
@@ -160,7 +142,7 @@ def command(name, region, func):
         if summonerV4Request.status_code == 200:
             summonerV4Request = summonerV4Request.json()
             leagueV4Request = leagueV4(summonerV4Request, region).json()[0]
-            summoner = getSummoner(summonerV4Request, leagueV4Request)
+            summoner = Summoner(summonerV4Request, leagueV4Request)
 
             response = func(summoner)
         else:
