@@ -1,7 +1,4 @@
 import requests
-import json
-import os
-from dotenv import load_dotenv
 
 #Dev Key for Riot API
 #Retrieved from env and initialized in init
@@ -48,18 +45,6 @@ class Summoner:
         self.wins = wins
         self.losses = losses
 
-#Parameters: object (json object), elementName(name of element being searched)
-#Returns value of json element
-def getJsonElement(object, elementName):
-    return object[elementName]
-    
-#Parameters: url (complete url constructed in get methods)
-#Request data from Riot servers
-def sendRequest(url):
-    response = requests.get(url)
-    
-    return response
-
 def validateRegion(region):
     isValid = False
 
@@ -91,7 +76,7 @@ def summonerV4ByName(summonerName, region):
     summonerName = summonerName,
     apiKey = apiKey)
 
-    return sendRequest(url)
+    return requests.get(url)
 
 #Requests Riot API SUMMONER-V4 by PUUID - a DTO of in game summoner info
 def summonerV4ByPuuid(summonerPuuid, region):
@@ -100,17 +85,17 @@ def summonerV4ByPuuid(summonerPuuid, region):
         summonerPuuid = summonerPuuid,
         apiKey = apiKey)
 
-    return sendRequest(url)
+    return requests.get(url)
 
 #Requests Riot API LEAGUE-V4 - a DTO of summoner account info
 def leagueV4(summoner, region):
-    summonerId = getJsonElement(summoner, "id")
+    summonerId = summoner["id"]
     url = "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summonerId}?api_key={apiKey}".format(
     region = region,
     summonerId = summonerId,
     apiKey = apiKey)
 
-    return sendRequest(url)
+    return requests.get(url)
 
 #Requests Riot API MATCH-V5 - a List[string] of match ids
 def MatchV5ByPuuid(summonerPuuid, region):
@@ -120,21 +105,21 @@ def MatchV5ByPuuid(summonerPuuid, region):
         summonerPuuid = summonerPuuid,
         apiKey = apiKey)
 
-    return sendRequest(url)
+    return requests.get(url)
 
 #Parameters: name (name of the summoner), region (region of the summoner)
 #Creates Summoner object for any data request regarding a summoner
 def getSummoner(summonerV4, leagueV4):
-    id = getJsonElement(leagueV4, "summonerId")
-    puuid = getJsonElement(summonerV4, "puuid")
-    iconId = getJsonElement(summonerV4, "profileIconId")
-    name = getJsonElement(leagueV4, "summonerName")
-    level = getJsonElement(summonerV4, "summonerLevel")
-    tier = getJsonElement(leagueV4, "tier")
-    rank = getJsonElement(leagueV4, "rank")
-    lp = getJsonElement(leagueV4, "leaguePoints")
-    wins = getJsonElement(leagueV4, "wins")
-    losses = getJsonElement(leagueV4, "losses")
+    id = leagueV4["summonerId"]
+    puuid = summonerV4["puuid"]
+    iconId = summonerV4["profileIconId"]
+    name = leagueV4["summonerName"]
+    level = summonerV4["summonerLevel"]
+    tier = leagueV4["tier"]
+    rank = leagueV4["rank"]
+    lp = leagueV4["leaguePoints"]
+    wins = leagueV4["wins"]
+    losses = leagueV4["losses"]
 
     summoner = Summoner(id, puuid, iconId, name, level, tier, rank, lp, wins, losses)
 
@@ -177,7 +162,7 @@ def command(name, region, func):
 
             response = func(summoner)
         else:
-            response = getJsonElement(summonerV4Request, "message")
+            response = summonerV4Request["message"]
     else: 
         response = invalidRegion
 

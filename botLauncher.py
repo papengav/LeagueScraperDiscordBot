@@ -1,15 +1,14 @@
-import leagueScraper
+import leagueScraper as ls
 import bot
 import os
 from dotenv import load_dotenv
-import discord
 
 def main():
     load_dotenv()
     apiKey = os.getenv('RIOT_API_KEY')
     botToken = os.getenv('BOT_TOKEN')
 
-    leagueScraper.init(apiKey)
+    ls.init(apiKey)
     bot.client.run(botToken)
 
 if __name__ == "__main__":
