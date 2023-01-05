@@ -50,6 +50,12 @@ class Summoner:
         self.wins = leagueV4["wins"]
         self.losses = leagueV4["losses"]
 
+    def getRank(self):
+        return f"{self.tier} {self.rank} {str(self.lp)} LP"
+
+    def getWinrate(self):
+        return f"{round(100 * (self.wins / (self.wins + self.losses)))}% WR"
+
 def validateRegion(region):
     isValid = False
 
@@ -122,33 +128,9 @@ def MatchV5ByMatchId(matchId, region):
 
     return requests.get(url)
 
-def getRank(summoner):
-    return "{name} is {tier} {rank} with {lp} lp in {queueType}".format(
-    name = summoner.name,
-    tier = summoner.tier,
-    rank = summoner.rank,
-    lp = summoner.lp,
-    queueType = summoner.queueType)
-
-def getWinRate(summoner):
-    winRate = round(100 * (summoner.wins / (summoner.wins + summoner.losses)))
-
-    return "{name} has {wins} wins and {losses} losses, giving them a winrate of {wr}% ".format(
-    name = summoner.name,
-    wins = summoner.wins,
-    losses = summoner.losses,
-    wr = winRate)
-
-def getLevel(summoner):
-    return "{name} is level {level}.".format(
-    name = summoner.name,
-    level = summoner.level)
-
-#Generalized function all interactions pass through. Invokes API methods to construct a summoner object, then passes off object to desired command.
-def command(name, region, func):
+#Validates and URL encodes input, invokes API request methods, returns summoner object or appropriate error message
+def getSummoner(name, region):
     regionIsValid = validateRegion(region)
-    summonerV4Request = None
-    response = None
     name = quote(name, safe = ' ')
 
     if regionIsValid:
@@ -157,9 +139,10 @@ def command(name, region, func):
         if summonerV4Request.status_code == 200:
             summonerV4Request = summonerV4Request.json()
             leagueV4Request = leagueV4(summonerV4Request, region).json()[0]
+            #add get highest queueType info here, adjust leagueV4 request accordingly
             summoner = Summoner(summonerV4Request, leagueV4Request)
 
-            response = func(summoner)
+            response = summoner
         else:
             response = summonerV4Request.json()["status"]["message"]
     else: 

@@ -25,20 +25,21 @@ async def turnoff(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("Unauthorized command")
 
-@tree.command(name = "rank", description = "Get a summoner's rank in their highest gamemode")
-async def rank(interaction: discord.Interaction, name: str, region: str):
-    response = ls.command(name, region, ls.getRank)
+@tree.command(name = "profile", description = "Get a summoner's profile")
+async def profile(interaction: discord.Interaction, name: str, region: str):
+    summoner = ls.getSummoner(name, region)
 
-    await interaction.response.send_message(response)
+    embed = discord.Embed(
+        title = summoner.name,
+        description = "Level " + str(summoner.level),
+        colour = discord.Colour.blue()
+    )
 
-@tree.command(name = "winrate", description = "Get a summoner's winrate")
-async def winrate(interaction: discord.Interaction, name: str, region: str):
-    response = ls.command(name, region, ls.getWinRate)
+    #embed.set_footer(text = "This is a footer")
+    embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
+    #embed.set_author(name = summoner.name)
+    embed.add_field(name = summoner.queueType, value = f"""{summoner.getRank()}
+    {str(summoner.wins)}W {str(summoner.losses)}L
+    {summoner.getWinrate()}""", inline = False)
 
-    await interaction.response.send_message(response)
-
-@tree.command(name = "level", description = "Get a summoner's level")
-async def level(interaction: discord.Interaction, name: str, region: str):
-    response = ls.command(name, region, ls.getLevel)
-
-    await interaction.response.send_message(response)
+    await interaction.response.send_message(embed = embed)
