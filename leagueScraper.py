@@ -79,8 +79,30 @@ def getSuperRegion(region):
 
     return superRegion
 
+#Returns the index of ranked solo queue in LeagueV4, if there is no solo queue history, returns ranked queue, otherwise returns whatever queue is at index 0
+def getLeagueV4Index(leagueV4):
+    index = 0
+    leagueV4Index = None
 
-#Requests Riot API SUMMONER-V4 by Summoner Name - a DTO of in game summoner info
+    for queueType in leagueV4:
+        if queueType["queueType"] == "RANKED_SOLO_5x5":
+            leagueV4Index = index
+        index += 1
+
+    if leagueV4Index == None:
+        index = 0
+        for queueType in leagueV4:
+            if queueType["queueType"] == "RANKED_FLEX_SR":
+                leagueV4Index = index
+            index += 1
+    
+    if leagueV4Index == None:
+        leagueV4Index = 0
+
+    print(leagueV4Index)
+    return leagueV4Index
+
+#Requests Riot API SUMMONER-V4 by Summoner Name - a DTO of summoner account info
 def summonerV4ByName(summonerName, region):
     url = "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summonerName}?api_key={apiKey}".format(
     region = region,
@@ -89,7 +111,7 @@ def summonerV4ByName(summonerName, region):
 
     return requests.get(url)
 
-#Requests Riot API SUMMONER-V4 by PUUID - a DTO of in game summoner info
+#Requests Riot API SUMMONER-V4 by PUUID - a DTO of summoner account info
 def summonerV4ByPuuid(summonerPuuid, region):
     url = "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{summonerPuuid}?api_key={apiKey}".format(
         region = region,
@@ -98,7 +120,7 @@ def summonerV4ByPuuid(summonerPuuid, region):
 
     return requests.get(url)
 
-#Requests Riot API LEAGUE-V4 - a DTO of summoner account info
+#Requests Riot API LEAGUE-V4 - a list[dict] of a summoner's queueTypes and coorelated stats
 def leagueV4(summoner, region):
     summonerId = summoner["id"]
     url = "https://{region}.api.riotgames.com/lol/league/v4/entries/by-summoner/{summonerId}?api_key={apiKey}".format(
@@ -138,8 +160,11 @@ def getSummoner(name, region):
 
         if summonerV4Request.status_code == 200:
             summonerV4Request = summonerV4Request.json()
-            leagueV4Request = leagueV4(summonerV4Request, region).json()[0]
-            #add get highest queueType info here, adjust leagueV4 request accordingly
+            leagueV4Request = leagueV4(summonerV4Request, region).json()
+            
+            leagueV4Index = getLeagueV4Index(leagueV4Request)
+            leagueV4Request = leagueV4Request[leagueV4Index]
+
             summoner = Summoner(summonerV4Request, leagueV4Request)
 
             response = summoner
