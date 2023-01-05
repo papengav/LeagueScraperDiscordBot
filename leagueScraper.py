@@ -99,7 +99,6 @@ def getLeagueV4Index(leagueV4):
     if leagueV4Index == None:
         leagueV4Index = 0
 
-    print(leagueV4Index)
     return leagueV4Index
 
 #Requests Riot API SUMMONER-V4 by Summoner Name - a DTO of summoner account info
