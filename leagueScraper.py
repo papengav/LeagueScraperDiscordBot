@@ -36,20 +36,31 @@ def init(key):
 class Summoner:
     def __init__(self, summonerV4, leagueV4, region):
         self.region = region
-        self.id = leagueV4["summonerId"]
+        self.id = summonerV4["id"]
         self.puuid = summonerV4["puuid"]
         self.iconId = summonerV4["profileIconId"]
-        self.name = leagueV4["summonerName"]
+        self.name = summonerV4["name"]
         self.level = summonerV4["summonerLevel"]
-        if leagueV4["queueType"] == "RANKED_FLEX_SR":
-            self.queueType = "Ranked Flex"
+
+        if len(leagueV4) > 0:
+            self.tier = leagueV4["tier"]
+            self.rank = leagueV4["rank"]
+            self.lp = leagueV4["leaguePoints"]
+            self.wins = leagueV4["wins"]
+            self.losses = leagueV4["losses"]
+
+            if leagueV4["queueType"] == "RANKED_FLEX_SR":
+                self.queueType = "Ranked Flex"
+            else:
+                self.queueType = "Ranked Solo/Duo"
         else:
-            self.queueType = "Ranked Solo/Duo"
-        self.tier = leagueV4["tier"]
-        self.rank = leagueV4["rank"]
-        self.lp = leagueV4["leaguePoints"]
-        self.wins = leagueV4["wins"]
-        self.losses = leagueV4["losses"]
+            self.queueType = None
+            self.tier = None
+            self.rank = None
+            self.lp = None
+            self.wins = None
+            self.losses = None
+                
 
     def getRank(self):
         return f"`{self.tier} {self.rank}` {str(self.lp)} LP"
@@ -163,11 +174,13 @@ def getSummoner(name, region):
             leagueV4Request = leagueV4(summonerV4Request, region).json()
             
             leagueV4Index = getLeagueV4Index(leagueV4Request)
-            leagueV4Request = leagueV4Request[leagueV4Index]
-
-            summoner = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4Request, region = region)
-
-            response = summoner
+            
+            try:
+                leagueV4RequestQueue = leagueV4Request[leagueV4Index]
+            except IndexError:
+                leagueV4RequestQueue = leagueV4Request
+            finally: 
+                response = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4RequestQueue, region = region)
         else:
             response = summonerV4Request.json()["status"]["message"]
     else: 

@@ -41,9 +41,13 @@ async def profile(interaction: discord.Interaction, name: str, region: str):
 
         embed.set_footer(text = f"Region: {(summoner.region).upper()}")
         embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
-        embed.add_field(name = summoner.queueType, value = f"""{rankedEmoji} {summoner.getRank()}
-        {str(summoner.wins)}W {str(summoner.losses)}L
-        {summoner.getWinrate()}""", inline = False)
+
+        if summoner.queueType != None:
+            embed.add_field(name = summoner.queueType, value = f"""{rankedEmoji} {summoner.getRank()}
+            {str(summoner.wins)}W {str(summoner.losses)}L
+            {summoner.getWinrate()}""", inline = False)
+        else:
+            embed.add_field(name = "Ranked", value = "No ranked match history found")
 
         await interaction.response.send_message(embed = embed)
     else:
