@@ -34,7 +34,8 @@ def init(key):
 
 #Class to store summoner information
 class Summoner:
-    def __init__(self, summonerV4, leagueV4):
+    def __init__(self, summonerV4, leagueV4, region):
+        self.region = region
         self.id = leagueV4["summonerId"]
         self.puuid = summonerV4["puuid"]
         self.iconId = summonerV4["profileIconId"]
@@ -164,7 +165,7 @@ def getSummoner(name, region):
             leagueV4Index = getLeagueV4Index(leagueV4Request)
             leagueV4Request = leagueV4Request[leagueV4Index]
 
-            summoner = Summoner(summonerV4Request, leagueV4Request)
+            summoner = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4Request, region = region)
 
             response = summoner
         else:

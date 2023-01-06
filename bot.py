@@ -36,9 +36,8 @@ async def profile(interaction: discord.Interaction, name: str, region: str):
         colour = discord.Colour.blue()
     )
 
-    #embed.set_footer(text = "This is a footer")
+    embed.set_footer(text = f"Region: {(summoner.region).upper()}")
     embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
-    #embed.set_author(name = summoner.name)
     embed.add_field(name = summoner.queueType, value = f"""{rankedEmoji} {summoner.getRank()}
     {str(summoner.wins)}W {str(summoner.losses)}L
     {summoner.getWinrate()}""", inline = False)
