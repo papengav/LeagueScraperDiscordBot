@@ -8,7 +8,14 @@ intents = discord.Intents.all()
 client = discord.Client(intents = intents)
 tree = app_commands.CommandTree(client)
 
-devId = 394314328594972673
+devId = None
+
+def init(id, token):
+    global devId
+    devId = int(id)
+
+    client.run(token)
+
 
 #Terminal output when bot is ready for use
 @client.event
