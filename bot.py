@@ -27,19 +27,24 @@ async def turnoff(interaction: discord.Interaction):
 
 @tree.command(name = "profile", description = "Get a summoner's profile")
 async def profile(interaction: discord.Interaction, name: str, region: str):
-    summoner = ls.getSummoner(name, region)
-    rankedEmoji = discord.utils.get(client.emojis, name = summoner.tier)
+    response = ls.getSummoner(name, region)
 
-    embed = discord.Embed(
-        title = summoner.name,
-        description = "Level " + str(summoner.level),
-        colour = discord.Colour.blue()
-    )
+    if isinstance(response, ls.Summoner):
+        summoner = response
+        rankedEmoji = discord.utils.get(client.emojis, name = summoner.tier)
 
-    embed.set_footer(text = f"Region: {(summoner.region).upper()}")
-    embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
-    embed.add_field(name = summoner.queueType, value = f"""{rankedEmoji} {summoner.getRank()}
-    {str(summoner.wins)}W {str(summoner.losses)}L
-    {summoner.getWinrate()}""", inline = False)
+        embed = discord.Embed(
+            title = summoner.name,
+            description = "Level " + str(summoner.level),
+            colour = discord.Colour.blue()
+        )
 
-    await interaction.response.send_message(embed = embed)
+        embed.set_footer(text = f"Region: {(summoner.region).upper()}")
+        embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
+        embed.add_field(name = summoner.queueType, value = f"""{rankedEmoji} {summoner.getRank()}
+        {str(summoner.wins)}W {str(summoner.losses)}L
+        {summoner.getWinrate()}""", inline = False)
+
+        await interaction.response.send_message(embed = embed)
+    else:
+        await interaction.response.send_message(response, ephemeral = True)
