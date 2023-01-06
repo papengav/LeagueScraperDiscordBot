@@ -51,7 +51,7 @@ class Summoner:
         self.losses = leagueV4["losses"]
 
     def getRank(self):
-        return f"{self.tier} {self.rank} {str(self.lp)} LP"
+        return f"`{self.tier} {self.rank}` {str(self.lp)} LP"
 
     def getWinrate(self):
         return f"{round(100 * (self.wins / (self.wins + self.losses)))}% WR"
