@@ -27,8 +27,8 @@ def init(key):
     regions = ["br1", "eun1", "euw1", "jp1", "kr", "la1", "la2", "na1", "oc1", "tr1", "ru"]
     superRegions = ["americas", "asia", "europe", "sea"]
     americaSuperRegion = ["br1", "la1", "la2", "na1"]
-    asiaSuperRegion = ["jp1", "kr", "tr1"]
-    europeSuperRegion = ["eun1", "euw1", "ru"]
+    asiaSuperRegion = ["jp1", "kr"]
+    europeSuperRegion = ["eun1", "euw1", "ru", "tr1"]
     seaSuperRegion = ["oc1"]
     invalidRegion= "Please submit a valid region", *regions
 
@@ -41,6 +41,7 @@ class Summoner:
         self.iconId = summonerV4["profileIconId"]
         self.name = summonerV4["name"]
         self.level = summonerV4["summonerLevel"]
+        self.matchHistory = []
 
         if len(leagueV4) > 0:
             self.tier = leagueV4["tier"]
@@ -60,13 +61,69 @@ class Summoner:
             self.lp = None
             self.wins = None
             self.losses = None
-                
 
     def getRank(self):
         return f"`{self.tier} {self.rank}` {str(self.lp)} LP"
 
     def getWinrate(self):
         return f"{round(100 * (self.wins / (self.wins + self.losses)))}% WR"
+
+class Match:
+    def __init__(self, matchV5):
+        self.matchId = matchV5["metadata"]["matchId"]
+        queueId = matchV5["info"]["queueId"]
+
+        if queueId == 76:
+            self.gameMode = "Ultra Rapid Fire"
+        elif queueId == 400:
+            self.gameMode = "Draft Pick"
+        elif queueId == 420:
+            self.gameMode = "Ranked Solo/Duo"
+        elif queueId == 430:
+            self.gameMode = "Blind Pick"
+        elif queueId == 440:
+            self.gameMode = "Ranked Flex"
+        elif queueId == 450:
+            self.gameMode = "ARAM"
+
+        self.date = matchV5["info"]["gameCreation"]
+        self.duration = matchV5["info"]["gameDuration"]
+        self.mapId = matchV5["info"]["mapId"]
+        self.participants = []
+
+        for player in matchV5["info"]["participants"]:
+            if player["teamId"] == 100:
+                team = "blue"
+            else:
+                team = "red"
+
+            participant = {
+                "teamId": team,
+                "championId": player["championId"],
+                "summonerName": player["summonerName"],
+                "kills": player["kills"],
+                "deaths": player["deaths"],
+                "assists": player["assists"],
+                "cs": str(int(player["totalMinionsKilled"]) + int(player["neutralMinionsKilled"])),
+                "gold": player["goldEarned"],
+                "position": player["teamPosition"],
+                "largestKillingSpree": player["largestKillingSpree"],
+                "largestMultiKill": player["largestMultiKill"],
+                "crowdControlScore": player["timeCCingOthers"],
+                "damageToChamps": player["totalDamageDealtToChampions"],
+                "damageToTurrets": player["damageDealtToTurrets"],
+                "damageToObjectives": player["damageDealtToObjectives"],
+                "damageHealed": player["totalHeal"],
+                "damageTaken": player["totalDamageTaken"],
+                "visionScore": player["visionScore"],
+                "wardsPlaced": player["wardsPlaced"],
+                "wardsDestroyed": player["wardsKilled"],
+                "controlWardsPlaced": player["challenges"]["controlWardsPlaced"],
+                "turretsDestroyed": player["turretKills"],
+                "inhibitorsDestroyed": player["inhibitorKills"],
+                "win": player["win"]
+            }
+            self.participants.append(participant)
 
 def validateRegion(region):
     isValid = False
@@ -122,15 +179,6 @@ def summonerV4ByName(summonerName, region):
 
     return requests.get(url)
 
-#Requests Riot API SUMMONER-V4 by PUUID - a DTO of summoner account info
-def summonerV4ByPuuid(summonerPuuid, region):
-    url = "https://{region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{summonerPuuid}?api_key={apiKey}".format(
-        region = region,
-        summonerPuuid = summonerPuuid,
-        apiKey = apiKey)
-
-    return requests.get(url)
-
 #Requests Riot API LEAGUE-V4 - a list[dict] of a summoner's queueTypes and coorelated stats
 def leagueV4(summoner, region):
     summonerId = summoner["id"]
@@ -142,9 +190,9 @@ def leagueV4(summoner, region):
     return requests.get(url)
 
 #Requests Riot API MATCH-V5 - a List[string] of match ids
-def MatchV5ByPuuid(summonerPuuid, region):
+def matchV5ByPuuid(summonerPuuid, region):
     superRegion = getSuperRegion(region)
-    url = "https://{superRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/{summonerPuuid}/ids?api_key={apiKey}".format(
+    url = "https://{superRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/{summonerPuuid}/ids?start=0&count=10&api_key={apiKey}".format(
         superRegion = superRegion,
         summonerPuuid = summonerPuuid,
         apiKey = apiKey)
@@ -152,7 +200,7 @@ def MatchV5ByPuuid(summonerPuuid, region):
     return requests.get(url)
 
 #Requests Riot API MATCH-V5 - A DTO of exhaustive match info
-def MatchV5ByMatchId(matchId, region):
+def matchV5ByMatchId(matchId, region):
     superRegion = getSuperRegion(region)
     url = "https://{superRegion}.api.riotgames.com/lol/match/v5/matches/{matchId}?api_key={apiKey}".format(
         superRegion = superRegion,
@@ -187,3 +235,16 @@ def getSummoner(name, region):
         response = invalidRegion
 
     return response
+
+def getMatchHistory(summoner):
+    matchIds = matchV5ByPuuid(summoner.puuid, summoner.region).json()
+    matches = []
+    
+    for id in matchIds:
+        matchV5 = matchV5ByMatchId(id, summoner.region).json()
+        match = Match(matchV5)
+        matches.append(match)
+        
+    summoner.matchHistory = matches
+
+    return matches
