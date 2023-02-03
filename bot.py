@@ -267,6 +267,7 @@ def matchStatsEmbed(match: ls.Match, summoner: ls.Summoner, team: str):
             visionScore += fData(participant["visionScore"])
 
     #Last few characters of strings removed so unicodes don't wrap and create new lines
+    #Discord embed constraints only allow max 3 horizontal fields with a small shared max width, makes formatting and aligning data a little sketchy
     teamStr = f"""\u1cbc\u1cbc\u1cbc\u1cbc\u1cbc {emojis}
     __KDA:__
      \u1cbc\u1cbc\u1cbc\u1cbc\u1cbc{kdas}

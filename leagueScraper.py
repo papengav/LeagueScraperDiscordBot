@@ -253,14 +253,17 @@ def getSummoner(name, region):
             summonerV4Request = summonerV4Request.json()
             leagueV4Request = leagueV4(summonerV4Request, region).json()
             
+            #Determine the index at which leagueV4Request has the most applicable ranked gamemode
             leagueV4Index = getLeagueV4Index(leagueV4Request)
             
-            try:
+            #Length of leagueV4Request is 0 if the summoner has no ranked match history
+            #Store and use the gamemode data at index previously determined, else pass on the empty, later interpreted in bot.py
+            if (len(leagueV4Request) > 0):
                 leagueV4RequestQueue = leagueV4Request[leagueV4Index]
-            except IndexError:
+            else:
                 leagueV4RequestQueue = leagueV4Request
-            finally: 
-                response = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4RequestQueue, region = region)
+
+            response = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4RequestQueue, region = region)
         else:
             response = summonerV4Request.json()["status"]["message"]
     else: 
