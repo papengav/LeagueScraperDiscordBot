@@ -24,12 +24,12 @@ def init(key):
     global invalidRegion 
 
     apiKey = key
-    regions = ["br1", "eun1", "euw1", "jp1", "kr", "la1", "la2", "na1", "oc1", "tr1", "ru"]
     superRegions = ["americas", "asia", "europe", "sea"]
-    americaSuperRegion = ["br1", "la1", "la2", "na1"]
-    asiaSuperRegion = ["jp1", "kr"]
+    americaSuperRegion = ["br1", "la1", "la2", "na1", "pbe"]
+    asiaSuperRegion = ["jp1", "kr", "ph2", "sg2", "tw2", "th2", "vn2"]
     europeSuperRegion = ["eun1", "euw1", "ru", "tr1"]
     seaSuperRegion = ["oc1"]
+    regions = americaSuperRegion + asiaSuperRegion + europeSuperRegion + seaSuperRegion
     invalidRegion= "Please submit a valid region", *regions
 
 #Class to store summoner information
@@ -72,21 +72,60 @@ class Match:
     def __init__(self, matchV5):
         self.matchId = matchV5["metadata"]["matchId"]
         queueId = matchV5["info"]["queueId"]
+        queues = {
+            "0": "Custom",
+            "72": "1v1 Snowdown Showdown",
+            "73": "2v2 Snowdown Showdown",
+            "75": "Hexakill",
+            "76": "Ultra Rapid Fire",
+            "78": "One For All: Mirror Mode",
+            "83": "Bot Ultra Rapid Fire",
+            "98": "Hexakill",
+            "100": "ARAM",
+            "310": "Nemesis",
+            "313": "Black Market Brawlers",
+            "317": "Definitely Not Dominion",
+            "325": "All Random",
+            "400": "Draft Pick",
+            "420": "Solo/Duo Ranked",
+            "430": "Blind Pick",
+            "440": "Ranked Flex",
+            "450": "ARAM",
+            "600": "Blood Hunt Assassin",
+            "610": "Dark Star: Singularity",
+            "700": "Clash",
+            "720": "ARAM Clash",
+            "820": "Bot Match",
+            "830": "Bot Match",
+            "840": "Bot Match",
+            "850": "Bot Match",
+            "900": "ARURF",
+            "910": "Ascension",
+            "920": "Legend of the Poro King",
+            "940": "Nexus Siege",
+            "950": "Doom Bots Voting",
+            "960": "Doom Bots Standard",
+            "980": "Star Guardian Invasion: Normal",
+            "990": "Star Guardian Invasion: Onslaught",
+            "1000": "PROJECT: Hunters",
+            "1010": "Snow ARURF",
+            "1020": "One for All",
+            "1030": "Odyssey Extraction: Intro",
+            "1040": "Odyssey Extraction: Cadet",
+            "1050": "Odyssey Extraction: Cremember",
+            "1060": "Odyssey Extraction: Captain",
+            "1070": "Odyssey Extraction: Onslaught",
+            "1200": "Nexus Blitz",
+            "1300": "Nexus Blitz",
+            "1400": "Ultimate Spellbook",
+            "1900": "Pick URF",
+            "2000": "Tutorial Match",
+            "2010": "Tutorial Match",
+            "2020": "Tutorial Match"
+        }
 
-        if queueId == 76:
-            self.gameMode = "Ultra Rapid Fire"
-        elif queueId == 400:
-            self.gameMode = "Draft Pick"
-        elif queueId == 420:
-            self.gameMode = "Ranked Solo/Duo"
-        elif queueId == 430:
-            self.gameMode = "Blind Pick"
-        elif queueId == 440:
-            self.gameMode = "Ranked Flex"
-        elif queueId == 450:
-            self.gameMode = "ARAM"
-
-        self.date = matchV5["info"]["gameCreation"]
+        self.gameMode = queues[str(queueId)]
+        self.date = matchV5["info"]["gameStartTimestamp"]
         self.duration = matchV5["info"]["gameDuration"]
         self.mapId = matchV5["info"]["mapId"]
         self.participants = []
@@ -98,7 +137,7 @@ class Match:
                 team = "red"
 
             participant = {
-                "teamId": team,
+                "team": team,
                 "championId": player["championId"],
                 "summonerName": player["summonerName"],
                 "kills": player["kills"],
@@ -106,8 +145,6 @@ class Match:
                 "assists": player["assists"],
                 "cs": str(int(player["totalMinionsKilled"]) + int(player["neutralMinionsKilled"])),
                 "gold": player["goldEarned"],
-                "position": player["teamPosition"],
-                "largestKillingSpree": player["largestKillingSpree"],
                 "largestMultiKill": player["largestMultiKill"],
                 "crowdControlScore": player["timeCCingOthers"],
                 "damageToChamps": player["totalDamageDealtToChampions"],
@@ -116,11 +153,6 @@ class Match:
                 "damageHealed": player["totalHeal"],
                 "damageTaken": player["totalDamageTaken"],
                 "visionScore": player["visionScore"],
-                "wardsPlaced": player["wardsPlaced"],
-                "wardsDestroyed": player["wardsKilled"],
-                "controlWardsPlaced": player["challenges"]["controlWardsPlaced"],
-                "turretsDestroyed": player["turretKills"],
-                "inhibitorsDestroyed": player["inhibitorKills"],
                 "win": player["win"]
             }
             self.participants.append(participant)
