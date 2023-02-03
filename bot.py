@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ui import View
 import leagueScraper as ls
 import datetime as dt
+import traceback
 
 #Define client and tree
 #Tree holds all application commands
@@ -333,33 +334,56 @@ async def turnoff(interaction: discord.Interaction):
 #Command to get a summoner's profile via LeagueScraper. Constructs and sends embed with returned data.
 @tree.command(name = "profile", description = "Get a summoner's profile")
 async def profile(interaction: discord.Interaction, name: str, region: str):
-    response = ls.getSummoner(name, region)
+    try:
+        response = ls.getSummoner(name, region)
 
-    #If request to Riot API encountered error, response will be an error message, not a summoner object
-    if isinstance(response, ls.Summoner):
-        summoner = response
-        embed = profileEmbed(summoner)
+        #If request to Riot API encountered error, response will be an error message, not a summoner object
+        if isinstance(response, ls.Summoner):
+            summoner = response
+            embed = profileEmbed(summoner)
 
-        await interaction.response.send_message(embed = embed)
-    #send error message not summoner object. Ephemeral messages only viewable by user who invoked command
-    else:
-        await interaction.response.send_message(response, ephemeral = True)
+            await interaction.response.send_message(embed = embed)
+        #send error message not summoner object. Ephemeral messages only viewable by user who invoked command
+        else:
+            await interaction.response.send_message(response, ephemeral = True)
+    except Exception:
+        exceptionDateTime = str(dt.datetime.now())
+
+        errorLog = open("errorLog.txt", "a")
+        errorLog.write(f"{exceptionDateTime}, name:{name}, region: {region}\n {traceback.format_exc()}\n")
+
+        await interaction.response.send_message("An unexpected error was encountered while processing this request", ephemeral = True)
 
 #Command to get a summoner's match history via LeagueScraper. Constructs and sends embed and select menu to view individual match data.
 @tree.command(name = "matches", description = "Get a summoner's match history")
 async def matches(interaction: discord.Interaction, name: str, region: str):
-    response = ls.getSummoner(name, region)
+    try:
+        deferredResponse = False
+        response = ls.getSummoner(name, region)
 
-    if isinstance(response, ls.Summoner):
-        await interaction.response.defer(thinking = True)
-        view = View(timeout = None)
-        summoner = response
-        matchHistory = ls.getMatchHistory(summoner)
+        if isinstance(response, ls.Summoner):
+            await interaction.response.defer(thinking = True)
+            deferredResponse = True
+            view = View(timeout = None)
+            summoner = response
+            matchHistory = ls.getMatchHistory(summoner)
 
-        embed = matchHistoryEmbed(matchHistory, summoner)
+            embed = matchHistoryEmbed(matchHistory, summoner)
 
-        view.add_item(MatchHistorySelect(matchHistory, summoner))
+            view.add_item(MatchHistorySelect(matchHistory, summoner))
 
-        await interaction.followup.send(embed = embed, view = view)
-    else:
-        await interaction.response.send_message(response, ephemeral = True)
+            await interaction.followup.send(embed = embed, view = view)
+        else:
+            await interaction.followup.send(response, ephemeral = True)
+    #If any unhandled exceptions were encountered during the code's process, log the timestamp, input parameters, and callstack to textfile
+    except Exception:
+        exceptionDateTime = str(dt.datetime.now())
+
+        errorLog = open("errorLog.txt", "a")
+        errorLog.write(f"{exceptionDateTime}, name:{name}, region: {region}\n {traceback.format_exc()}\n")
+
+        #Followup if response was deferred, otherwise send sole response to user
+        if (deferredResponse):
+            await interaction.followup.send("An unexpected error was encountered while processing this request", ephemeral = True)
+        else:
+            await interaction.response.send_message("An unexpected error was encountered while processing this request", ephemeral = True)
