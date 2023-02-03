@@ -5,23 +5,19 @@ from urllib.parse import quote
 #Retrieved from env and initialized in init
 apiKey = None
 
-regions = None
 superRegions = None
 americaSuperRegion = None
 asiaSuperRegion = None
 europeSuperRegion = None
 seaSuperRegion = None
-invalidRegion = None
 
 def init(key):
     global apiKey
-    global regions
     global superRegions
     global americaSuperRegion
     global asiaSuperRegion
     global europeSuperRegion
     global seaSuperRegion
-    global invalidRegion 
 
     apiKey = key
     superRegions = ["americas", "asia", "europe", "sea"]
@@ -29,8 +25,6 @@ def init(key):
     asiaSuperRegion = ["jp1", "kr", "ph2", "sg2", "tw2", "th2", "vn2"]
     europeSuperRegion = ["eun1", "euw1", "ru", "tr1"]
     seaSuperRegion = ["oc1"]
-    regions = americaSuperRegion + asiaSuperRegion + europeSuperRegion + seaSuperRegion
-    invalidRegion= "Please submit a valid region", *regions
 
 #Class to store summoner information
 class Summoner:
@@ -156,14 +150,6 @@ class Match:
                 "win": player["win"]
             }
             self.participants.append(participant)
-
-def validateRegion(region):
-    isValid = False
-
-    if region in regions:
-        isValid = True
-
-    return isValid
     
 #Determine which Super Region an inputed region exists within
 def getSuperRegion(region):
@@ -243,31 +229,26 @@ def matchV5ByMatchId(matchId, region):
 
 #Validates and URL encodes input, invokes API request methods, returns summoner object or appropriate error message
 def getSummoner(name, region):
-    regionIsValid = validateRegion(region)
     name = quote(name, safe = ' ')
+    summonerV4Request = summonerV4ByName(name, region)
 
-    if regionIsValid:
-        summonerV4Request = summonerV4ByName(name, region)
-
-        if summonerV4Request.status_code == 200:
-            summonerV4Request = summonerV4Request.json()
-            leagueV4Request = leagueV4(summonerV4Request, region).json()
-            
-            #Determine the index at which leagueV4Request has the most applicable ranked gamemode
-            leagueV4Index = getLeagueV4Index(leagueV4Request)
-            
-            #Length of leagueV4Request is 0 if the summoner has no ranked match history
-            #Store and use the gamemode data at index previously determined, else pass on the empty, later interpreted in bot.py
-            if (len(leagueV4Request) > 0):
-                leagueV4RequestQueue = leagueV4Request[leagueV4Index]
-            else:
-                leagueV4RequestQueue = leagueV4Request
-
-            response = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4RequestQueue, region = region)
+    if summonerV4Request.status_code == 200:
+        summonerV4Request = summonerV4Request.json()
+        leagueV4Request = leagueV4(summonerV4Request, region).json()
+        
+        #Determine the index at which leagueV4Request has the most applicable ranked gamemode
+        leagueV4Index = getLeagueV4Index(leagueV4Request)
+        
+        #Length of leagueV4Request is 0 if the summoner has no ranked match history
+        #Store and use the gamemode data at index previously determined, else pass on the empty, later interpreted in bot.py
+        if (len(leagueV4Request) > 0):
+            leagueV4RequestQueue = leagueV4Request[leagueV4Index]
         else:
-            response = summonerV4Request.json()["status"]["message"]
-    else: 
-        response = invalidRegion
+            leagueV4RequestQueue = leagueV4Request
+
+        response = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4RequestQueue, region = region)
+    else:
+        response = summonerV4Request.json()["status"]["message"]
 
     return response
 

@@ -4,6 +4,7 @@ from discord.ui import View
 import leagueScraper as ls
 import datetime as dt
 import traceback
+from enum import Enum
 
 #Define client and tree
 #Tree holds all application commands
@@ -18,6 +19,25 @@ def init(id, token):
     devId = int(id)
 
     client.run(token)
+
+class Region(Enum):
+    NorthAmerica = "na1"
+    Brazil = "br1"
+    LatinAmericaNorth = "la1"
+    LatinAmericaSouth = "la2"
+    PBE = "pbe"
+    Japan = "jp1"
+    Korea = "kr"
+    Philippines = "ph2"
+    Singapore = "sg2"
+    Taiwan = "tw2"
+    Thailand = "th2"
+    Vietnam = "vn2"
+    NorthEurope = "eun1"
+    WestEurope = "euw1"
+    Russia = "ru"
+    Turkey = "tr1"
+    Oceania = "oc1"
 
 #Construct and return select menu for match history and matches
 class MatchHistorySelect(discord.ui.Select):
@@ -350,9 +370,9 @@ async def help(interaction: discord.Interaction):
 
 #Command to get a summoner's profile via LeagueScraper. Constructs and sends embed with returned data.
 @tree.command(name = "profile", description = "Get a summoner's profile")
-async def profile(interaction: discord.Interaction, name: str, region: str):
+async def profile(interaction: discord.Interaction, name: str, region: Region):
     try:
-        response = ls.getSummoner(name, region)
+        response = ls.getSummoner(name, region.value)
 
         #If request to Riot API encountered error, response will be an error message, not a summoner object
         if isinstance(response, ls.Summoner):
@@ -373,10 +393,10 @@ async def profile(interaction: discord.Interaction, name: str, region: str):
 
 #Command to get a summoner's match history via LeagueScraper. Constructs and sends embed and select menu to view individual match data.
 @tree.command(name = "matches", description = "Get a summoner's match history")
-async def matches(interaction: discord.Interaction, name: str, region: str):
+async def matches(interaction: discord.Interaction, name: str, region: Region):
     try:
         deferredResponse = False
-        response = ls.getSummoner(name, region)
+        response = ls.getSummoner(name, region.value)
 
         if isinstance(response, ls.Summoner):
             await interaction.response.defer(thinking = True)
