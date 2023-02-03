@@ -316,6 +316,18 @@ def profileEmbed(summoner: ls.Summoner):
 
     return embed
 
+#Construct and return embed with basic descriptions of the bots commands
+def helpEmbed():
+    embed = discord.Embed(
+        title = "Help Menu",
+        colour = discord.Colour.blue()
+    )
+
+    embed.add_field(name = "/profile", value = "▸ Get a summoners profile.\n▸ Returns summoner's level, rank info, and winrate.", inline = False)
+    embed.add_field(name = "/matches", value = "▸ Get a summoners 10 most recent matches.\n▸ Additional dropdowns allow inspection of individual matches, and more intricate data.", inline = False)
+
+    return embed
+
 #Terminal output when bot is ready for use
 @client.event
 async def on_ready():
@@ -330,6 +342,11 @@ async def turnoff(interaction: discord.Interaction):
         await client.close()
     else:
         await interaction.response.send_message("Unauthorized command", ephemeral = True)
+
+@tree.command(name = "help", description = "Get a description of LeagueScraper's functionality")
+async def help(interaction: discord.Interaction):
+    embed = helpEmbed()
+    await interaction.response.send_message(embed = embed)
 
 #Command to get a summoner's profile via LeagueScraper. Constructs and sends embed with returned data.
 @tree.command(name = "profile", description = "Get a summoner's profile")
