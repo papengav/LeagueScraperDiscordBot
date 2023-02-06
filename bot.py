@@ -21,10 +21,10 @@ def init(id, token):
     client.run(token)
 
 class Region(Enum):
-    NorthAmerica = "na1"
+    North_America = "na1"
     Brazil = "br1"
-    LatinAmericaNorth = "la1"
-    LatinAmericaSouth = "la2"
+    North_Latin_America = "la1"
+    South_Latin_America = "la2"
     PBE = "pbe"
     Japan = "jp1"
     Korea = "kr"
@@ -33,8 +33,8 @@ class Region(Enum):
     Taiwan = "tw2"
     Thailand = "th2"
     Vietnam = "vn2"
-    NorthEurope = "eun1"
-    WestEurope = "euw1"
+    North_Europe = "eun1"
+    West_Europe = "euw1"
     Russia = "ru"
     Turkey = "tr1"
     Oceania = "oc1"
@@ -133,7 +133,10 @@ def matchHistoryEmbed(matchHistory: list[ls.Match], summoner: ls.Summoner):
             colour = discord.Colour.blue()
         )
 
-    embed.set_footer(text = f"Region: {(summoner.region).upper()}")
+    timeSinceRefreshed = dt.datetime.now() - summoner.refreshed
+    minSinceRefreshed = timeSinceRefreshed.total_seconds() / 60
+
+    embed.set_footer(text = f"Region: {(summoner.region).upper()}\nRefreshed: {int(minSinceRefreshed)}min ago")
     embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
 
     matches = ""
@@ -172,8 +175,9 @@ def matchEmbed(match: ls.Match, summoner: ls.Summoner):
             else:
                 color = discord.Colour.red()
 
-    #Unix timestamp given in miliseconds. / by 1000 to convert to seconds for dt function
-    matchDate = str(dt.datetime.fromtimestamp(match.date / 1000))
+    #Unix timestamp given in miliseconds. // by 1000 to convert to seconds format for discord ui to handle with <:f##########:t>
+    #double // floors division value
+    matchDate = f"<t:{str(match.date // 1000)}:f>"
     matchDuration = str(dt.timedelta(seconds = match.duration))
 
     embed = discord.Embed(
@@ -237,8 +241,7 @@ def matchStatsEmbed(match: ls.Match, summoner: ls.Summoner, team: str):
             else:
                 color = discord.Colour.red()
 
-    #Unix timestamp given in miliseconds. / by 1000 to convert to seconds for dt function
-    matchDate = str(dt.datetime.fromtimestamp(match.date / 1000))
+    matchDate = f"<t:{str(match.date // 1000)}:f>"
     matchDuration = str(dt.timedelta(seconds = match.duration))
 
     embed = discord.Embed(
@@ -324,7 +327,10 @@ def profileEmbed(summoner: ls.Summoner):
         colour = discord.Colour.blue()
     )
 
-    embed.set_footer(text = f"Region: {(summoner.region).upper()}")
+    timeSinceRefreshed = dt.datetime.now() - summoner.refreshed
+    minSinceRefreshed = timeSinceRefreshed.total_seconds() / 60
+
+    embed.set_footer(text = f"Region: {(summoner.region).upper()}\nRefreshed: {int(minSinceRefreshed)}min ago")
     embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
 
     if summoner.queueType != None:
@@ -345,6 +351,7 @@ def helpEmbed():
 
     embed.add_field(name = "/profile", value = "▸ Get a summoners profile.\n▸ Returns summoner's level, rank info, and winrate.", inline = False)
     embed.add_field(name = "/matches", value = "▸ Get a summoners 10 most recent matches.\n▸ Additional dropdowns allow inspection of individual matches, and more intricate data.", inline = False)
+    embed.add_field(name = "Misc:", value = "▸ Summoner profile and match data can only be refreshed every 30 minutes\n▸ DM Azzen#4343 with bug reports and suggestions", inline = False)
 
     return embed
 
@@ -396,6 +403,8 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
 async def matches(interaction: discord.Interaction, name: str, region: Region):
     try:
         deferredResponse = False
+        #summoner name case sensitive when testing for cache in leagueScraper.py
+        name = name.upper()
         response = ls.getSummoner(name, region.value)
 
         if isinstance(response, ls.Summoner):

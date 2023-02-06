@@ -1,5 +1,8 @@
 import requests
 from urllib.parse import quote
+from cachetools import cached, TTLCache
+import datetime as dt
+import time
 
 #Dev Key for Riot API
 #Retrieved from env and initialized in init
@@ -10,6 +13,10 @@ americaSuperRegion = None
 asiaSuperRegion = None
 europeSuperRegion = None
 seaSuperRegion = None
+
+#cache stores 100 summoners, summoners expire after 1800 seconds (30 minutes)
+#follows LRU model if cache is full and no summoners are expiring 
+summonerCache = TTLCache(maxsize = 100, ttl = 1800)
 
 def init(key):
     global apiKey
@@ -22,9 +29,9 @@ def init(key):
     apiKey = key
     superRegions = ["americas", "asia", "europe", "sea"]
     americaSuperRegion = ["br1", "la1", "la2", "na1", "pbe"]
-    asiaSuperRegion = ["jp1", "kr", "ph2", "sg2", "tw2", "th2", "vn2"]
+    asiaSuperRegion = ["jp1", "kr"]
     europeSuperRegion = ["eun1", "euw1", "ru", "tr1"]
-    seaSuperRegion = ["oc1"]
+    seaSuperRegion = ["oc1", "ph2", "sg2", "tw2", "th2", "vn2"]
 
 #Class to store summoner information
 class Summoner:
@@ -36,6 +43,7 @@ class Summoner:
         self.name = summonerV4["name"]
         self.level = summonerV4["summonerLevel"]
         self.matchHistory = []
+        self.refreshed = dt.datetime.now()
 
         if len(leagueV4) > 0:
             self.tier = leagueV4["tier"]
@@ -150,7 +158,7 @@ class Match:
                 "win": player["win"]
             }
             self.participants.append(participant)
-    
+
 #Determine which Super Region an inputed region exists within
 def getSuperRegion(region):
     superRegion = None
@@ -228,6 +236,8 @@ def matchV5ByMatchId(matchId, region):
     return requests.get(url)
 
 #Validates and URL encodes input, invokes API request methods, returns summoner object or appropriate error message
+#Caches result of function to summonerCache, if parameters used parameters, retrieve cooresponding object from cache
+@cached(summonerCache)
 def getSummoner(name, region):
     name = quote(name, safe = ' ')
     summonerV4Request = summonerV4ByName(name, region)
@@ -252,15 +262,20 @@ def getSummoner(name, region):
 
     return response
 
-def getMatchHistory(summoner):
-    matchIds = matchV5ByPuuid(summoner.puuid, summoner.region).json()
-    matches = []
-    
-    for id in matchIds:
-        matchV5 = matchV5ByMatchId(id, summoner.region).json()
-        match = Match(matchV5)
-        matches.append(match)
+#Only request new matches if the summoner doesn't already have stored matches.
+#If new matches are requested, add them to the cached summoner object
+def getMatchHistory(summoner: Summoner):
+    if len(summoner.matchHistory) == 0:
+        matchIds = matchV5ByPuuid(summoner.puuid, summoner.region).json()
+        matches = []
         
-    summoner.matchHistory = matches
+        for id in matchIds:
+            matchV5 = matchV5ByMatchId(id, summoner.region).json()
+            match = Match(matchV5)
+            matches.append(match)
+            
+        summoner.matchHistory = matches
+    else:
+        matches = summoner.matchHistory
 
     return matches
