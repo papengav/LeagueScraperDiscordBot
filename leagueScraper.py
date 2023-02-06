@@ -16,7 +16,8 @@ seaSuperRegion = None
 
 #cache stores 100 summoners, summoners expire after 1800 seconds (30 minutes)
 #follows LRU model if cache is full and no summoners are expiring 
-summonerCache = TTLCache(maxsize = 100, ttl = 1800)
+cacheTTL = 1800
+summonerCache = TTLCache(maxsize = 100, ttl = cacheTTL)
 
 def init(key):
     global apiKey

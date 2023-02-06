@@ -351,7 +351,7 @@ def helpEmbed():
 
     embed.add_field(name = "/profile", value = "▸ Get a summoners profile.\n▸ Returns summoner's level, rank info, and winrate.", inline = False)
     embed.add_field(name = "/matches", value = "▸ Get a summoners 10 most recent matches.\n▸ Additional dropdowns allow inspection of individual matches, and more intricate data.", inline = False)
-    embed.add_field(name = "Misc:", value = "▸ Summoner profile and match data can only be refreshed every 30 minutes\n▸ DM Azzen#4343 with bug reports and suggestions", inline = False)
+    embed.add_field(name = "Misc:", value = f"▸ Summoner profile and match data can only be refreshed every {int(ls.cacheTTL / 60)} minutes\n▸ DM Azzen#4343 with bug reports and suggestions", inline = False)
 
     return embed
 
