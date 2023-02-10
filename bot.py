@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ui import View
 import leagueScraper as ls
 import datetime as dt
+import calendar
 import traceback
 from enum import Enum
 
@@ -133,10 +134,6 @@ def matchHistoryEmbed(matchHistory: list[ls.Match], summoner: ls.Summoner):
             colour = discord.Colour.blue()
         )
 
-    timeSinceRefreshed = dt.datetime.now() - summoner.refreshed
-    minSinceRefreshed = timeSinceRefreshed.total_seconds() / 60
-
-    embed.set_footer(text = f"Region: {(summoner.region).upper()}\nRefreshed: {int(minSinceRefreshed)}min ago")
     embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
 
     matches = ""
@@ -163,6 +160,9 @@ def matchHistoryEmbed(matchHistory: list[ls.Match], summoner: ls.Summoner):
     embed.add_field(name = "Match History", value = matches, inline = True)
     embed.add_field(name = "KDA".ljust(8, "\u1cbc") + "CS", value = kdaAndCs, inline = True)
     embed.add_field(name = "Gold", value = gold, inline = True)
+
+    refreshedEpoc = calendar.timegm(summoner.refreshed.timetuple())
+    embed.add_field(name = "\u1cbc", value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoc}:f>")
 
     return embed
 
@@ -327,10 +327,8 @@ def profileEmbed(summoner: ls.Summoner):
         colour = discord.Colour.blue()
     )
 
-    timeSinceRefreshed = dt.datetime.now() - summoner.refreshed
-    minSinceRefreshed = timeSinceRefreshed.total_seconds() / 60
+    
 
-    embed.set_footer(text = f"Region: {(summoner.region).upper()}\nRefreshed: {int(minSinceRefreshed)}min ago")
     embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
 
     if summoner.queueType != None:
@@ -339,6 +337,10 @@ def profileEmbed(summoner: ls.Summoner):
         {summoner.getWinrate()}""", inline = False)
     else:
         embed.add_field(name = "Ranked", value = "No ranked match history found")
+
+    #Discord doesn't format timestamps in footer, so added as field instead
+    refreshedEpoc = calendar.timegm(summoner.refreshed.timetuple())
+    embed.add_field(name = "\u1cbc", value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoc}:f>")
 
     return embed
 
