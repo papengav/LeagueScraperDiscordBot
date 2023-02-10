@@ -161,8 +161,8 @@ def matchHistoryEmbed(matchHistory: list[ls.Match], summoner: ls.Summoner):
     embed.add_field(name = "KDA".ljust(8, "\u1cbc") + "CS", value = kdaAndCs, inline = True)
     embed.add_field(name = "Gold", value = gold, inline = True)
 
-    refreshedEpoc = calendar.timegm(summoner.refreshed.timetuple())
-    embed.add_field(name = "\u1cbc", value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoc}:f>")
+    refreshedEpoch = calendar.timegm(summoner.refreshed.timetuple())
+    embed.add_field(name = "".ljust(45, '-'), value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoch}:f>", inline = False)
 
     return embed
 
@@ -339,8 +339,8 @@ def profileEmbed(summoner: ls.Summoner):
         embed.add_field(name = "Ranked", value = "No ranked match history found")
 
     #Discord doesn't format timestamps in footer, so added as field instead
-    refreshedEpoc = calendar.timegm(summoner.refreshed.timetuple())
-    embed.add_field(name = "\u1cbc", value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoc}:f>")
+    refreshedEpoch = calendar.timegm(summoner.refreshed.timetuple())
+    embed.add_field(name = "".ljust(45, '-'), value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoch}:f>", inline = False)
 
     return embed
 
