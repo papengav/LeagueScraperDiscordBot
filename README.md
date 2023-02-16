@@ -9,9 +9,11 @@ botLauncher.py - Initializes the package along with tokens/keys from an .env fil
 
 ---
 LeagueScraper features three commands for users that will automatically appear when a "/" is typed into Discord's textbox.
+
 ![image](https://user-images.githubusercontent.com/35815544/219257102-6c4ca7c4-784f-4a59-b5da-54dca4aaf553.png)
 
 Profile and Matches commands both search for data related to Summoners (League of Legends accounts). Both commands take the name and region of the summoner as parameters. An item from the region dropdown must be selected for the region parameter.
+
 ![image](https://user-images.githubusercontent.com/35815544/219257653-9ca25c1d-6bb9-4692-968f-f0ce5042de35.png)
 
 ---
