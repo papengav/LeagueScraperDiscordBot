@@ -25,7 +25,7 @@ The footer displays the region of the Summoner, along with a timestamp of when t
 ---
 
 **Matches Command:** Displays an embed with basic data on a Summoner's 10 most recent matches.
-For each match, whether the Summoner won or lost is dislayed along with an icon of the champion (character) they played, the game-mode, their K/D/A (Kills, Deaths, Assists), CS (how many monsters they defeated), and gold acquired during the match.
+For each match, whether the Summoner won or lost is displayed along with an icon of the champion (character) they played, the game-mode, their K/D/A (Kills, Deaths, Assists), CS (how many monsters they defeated), and gold acquired during the match.
 
 ![image](https://user-images.githubusercontent.com/35815544/219258192-f00acb75-5f75-4ca4-91c7-a2fc241fceb8.png)
 
@@ -33,7 +33,7 @@ The dropdown menu at the bottom of the embed allows users to select and view mat
 
 ![image](https://user-images.githubusercontent.com/35815544/219258606-5c20ae74-6a21-41eb-934b-e7fbc00df147.png)
 
-Once a specific match is selected from the dropdown, users can view the matches gamemode, the timestamp that the match started, the duration of the match, the matche's map icon, along with each team's participating Summoner's champ icon, Summoner name, KDA, CS and gold.
+Once a specific match is selected from the dropdown, users can view the matches gamemode, the timestamp that the match started, the duration of the match, the match's map icon, along with each team's participating Summoner's champ icon, Summoner name, KDA, CS and gold.
 The first dropdown can be used to view more matches, or return to the match history embed.
 
 ![image](https://user-images.githubusercontent.com/35815544/219258771-059724c4-76d3-4b34-8058-4e01cc05448c.png)
