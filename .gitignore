@@ -1,7 +1,4 @@
-__pycache__/bot.cpython-310.pyc
-__pycache__/bot.cpython-311.pyc
-__pycache__/leagueScraper.cpython-310.pyc
-__pycache__/leagueScraper.cpython-311.pyc
+__pycache__
 .env
 TODO.txt
 errorLog.txt
