@@ -7,6 +7,8 @@ bot.py - Handles Discord integration, creating a command interface for users to 
 
 botLauncher.py - Initializes the package along with tokens/keys from an .env file. Then connects the bot to discord for use.
 
+rateLimiter.py - Defines a class and custom exception to post-emptively manage Riot API rate limiting
+
 ---
 LeagueScraper features three commands for users that will automatically appear when a "/" is typed into Discord's textbox.
 

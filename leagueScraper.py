@@ -2,7 +2,7 @@ import requests
 from urllib.parse import quote
 from cachetools import cached, TTLCache
 import datetime as dt
-import time
+from rateLimiter import rateLimiter
 
 #Dev Key for Riot API
 #Retrieved from env and initialized in init
@@ -18,6 +18,9 @@ seaSuperRegion = None
 #follows LRU model if cache is full and no summoners are expiring 
 cacheTTL = 1800
 summonerCache = TTLCache(maxsize = 100, ttl = cacheTTL)
+
+#Rate Limiter Object
+limit = rateLimiter()
 
 def init(key):
     global apiKey
@@ -217,8 +220,8 @@ def leagueV4(summoner, region):
     return requests.get(url)
 
 #Requests Riot API MATCH-V5 - a List[string] of match ids
-def matchV5ByPuuid(summonerPuuid, region):
-    superRegion = getSuperRegion(region)
+def matchV5ByPuuid(summonerPuuid, superRegion):
+    
     url = "https://{superRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/{summonerPuuid}/ids?start=0&count=10&api_key={apiKey}".format(
         superRegion = superRegion,
         summonerPuuid = summonerPuuid,
@@ -227,8 +230,7 @@ def matchV5ByPuuid(summonerPuuid, region):
     return requests.get(url)
 
 #Requests Riot API MATCH-V5 - A DTO of exhaustive match info
-def matchV5ByMatchId(matchId, region):
-    superRegion = getSuperRegion(region)
+def matchV5ByMatchId(matchId, superRegion):
     url = "https://{superRegion}.api.riotgames.com/lol/match/v5/matches/{matchId}?api_key={apiKey}".format(
         superRegion = superRegion,
         matchId = matchId,
@@ -238,14 +240,15 @@ def matchV5ByMatchId(matchId, region):
 
 #Validates and URL encodes input, invokes API request methods, returns summoner object or appropriate error message
 #Caches result of function to summonerCache, if parameters used parameters, retrieve cooresponding object from cache
-@cached(summonerCache)
+#@cached(summonerCache)
 def getSummoner(name, region):
     name = quote(name, safe = ' ')
-    summonerV4Request = summonerV4ByName(name, region)
+    
+    summonerV4Request = limit(summonerV4ByName, name, region)
 
     if summonerV4Request.status_code == 200:
         summonerV4Request = summonerV4Request.json()
-        leagueV4Request = leagueV4(summonerV4Request, region).json()
+        leagueV4Request = limit(leagueV4, summonerV4Request, region).json()
         
         #Determine the index at which leagueV4Request has the most applicable ranked gamemode
         leagueV4Index = getLeagueV4Index(leagueV4Request)
@@ -267,11 +270,12 @@ def getSummoner(name, region):
 #If new matches are requested, add them to the cached summoner object
 def getMatchHistory(summoner: Summoner):
     if len(summoner.matchHistory) == 0:
-        matchIds = matchV5ByPuuid(summoner.puuid, summoner.region).json()
+        superRegion = getSuperRegion(summoner.region)
+        matchIds = limit(matchV5ByPuuid, summoner.puuid, superRegion).json()
         matches = []
         
         for id in matchIds:
-            matchV5 = matchV5ByMatchId(id, summoner.region).json()
+            matchV5 = limit(matchV5ByMatchId, id, superRegion).json()
             match = Match(matchV5)
             matches.append(match)
             

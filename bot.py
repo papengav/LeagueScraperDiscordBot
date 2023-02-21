@@ -6,6 +6,7 @@ import datetime as dt
 import calendar
 import traceback
 from enum import Enum
+from rateLimiter import RateLimitExceeded
 
 #Define client and tree
 #Tree holds all application commands
@@ -230,7 +231,6 @@ def matchEmbed(match: ls.Match, summoner: ls.Summoner):
 
 #format strings used in matchStatsEmbed
 def fData(data):
-    data = f"{data:,}"
     return str(data).ljust(10, "\u1cbc") 
 
 def matchStatsEmbed(match: ls.Match, summoner: ls.Summoner, team: str):
@@ -387,21 +387,33 @@ async def help(interaction: discord.Interaction):
 @tree.command(name = "profile", description = "Get a summoner's profile")
 async def profile(interaction: discord.Interaction, name: str, region: Region):
     try:
+        deferredResponse = False
         response = ls.getSummoner(name, region.value)
 
         #If request to Riot API encountered error, response will be an error message, not a summoner object
         if isinstance(response, ls.Summoner):
+            await interaction.response.defer(thinking = True)
+            deferredResponse = True
+
             summoner = response
             embed = profileEmbed(summoner)
 
-            await interaction.response.send_message(embed = embed)
+            await interaction.followup.send(embed = embed)
         #send error message not summoner object. Ephemeral messages only viewable by user who invoked command
         else:
             await interaction.response.send_message(response, ephemeral = True)
+    except RateLimitExceeded:
+        if (deferredResponse):
+            await interaction.followup.send("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
+        else:
+            await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
     except Exception:
         logError(name, region)
 
-        await interaction.response.send_message("An unexpected error was encountered while processing this request", ephemeral = True)
+        if (deferredResponse):
+            await interaction.followup.send("An unexpected error was encountered while processing this request", ephemeral = True)
+        else:
+            await interaction.response.send_message("An unexpected error was encountered while processing this request", ephemeral = True)
 
 #Command to get a summoner's match history via LeagueScraper. Constructs and sends embed and select menu to view individual match data.
 @tree.command(name = "matches", description = "Get a summoner's match history")
@@ -415,6 +427,7 @@ async def matches(interaction: discord.Interaction, name: str, region: Region):
         if isinstance(response, ls.Summoner):
             await interaction.response.defer(thinking = True)
             deferredResponse = True
+
             view = View(timeout = None)
             summoner = response
             matchHistory = ls.getMatchHistory(summoner)
@@ -425,7 +438,13 @@ async def matches(interaction: discord.Interaction, name: str, region: Region):
 
             await interaction.followup.send(embed = embed, view = view)
         else:
-            await interaction.followup.send(response, ephemeral = True)
+            await interaction.response.send_message(response, ephemeral = True)
+    #Output proper message if rate limit for region has been reached
+    except RateLimitExceeded:
+        if (deferredResponse):
+            await interaction.followup.send("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
+        else:
+            await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
     #If any unhandled exceptions were encountered during the code's process, log the timestamp, input parameters, and callstack to textfile
     except Exception:
         logError(name, region)
