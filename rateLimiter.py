@@ -10,7 +10,9 @@ class rateLimiter(object):
         # Map of values that have reached their rate limit - name = routing value, value = time remaining
         self.limitedValues = {}
 
-    def __call__(self, func, argOne, routingValue):
+    # Routing value will end up getting passed in twice upon call: once for routingValue and once for *args
+    # i.e. rateLimiter(func, routingValue, summonerName, routingValue)
+    def __call__(self, func, routingValue, *args, **kwargs):
         #First check to see if routing value is already reached it's limit
         #If routing value is already limited, but sufficient time has passed, remove it from the map and continue
         #Else raise rate limit exception
@@ -23,7 +25,7 @@ class rateLimiter(object):
                     raise RateLimitExceeded
 
         #Send API Request
-        response = func(argOne, routingValue)
+        response = func(*args, **kwargs)
 
         # If the rate limit is exceeded, and more calls are available sooner than maxWait, try again after refreshTime seconds have passed
         # Else add routingValue to limited values map, refresh time to map, and raise rate limit exception
@@ -32,7 +34,7 @@ class rateLimiter(object):
             
             if refreshTime <= self.MAX_WAIT:
                 time.sleep(refreshTime)
-                response = func(argOne, routingValue)
+                response = func(*args, **kwargs)
             else:
                 self.limitedValues[routingValue] = datetime.now() + timedelta(seconds = refreshTime)
                 raise RateLimitExceeded

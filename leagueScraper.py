@@ -1,6 +1,6 @@
 import requests
 from urllib.parse import quote
-from cachetools import cached, TTLCache
+from cachetools import TTLCache
 import datetime as dt
 from rateLimiter import rateLimiter
 
@@ -244,11 +244,11 @@ def matchV5ByMatchId(matchId, superRegion):
 def getSummoner(name, region):
     name = quote(name, safe = ' ')
     
-    summonerV4Request = limit(summonerV4ByName, name, region)
+    summonerV4Request = limit(summonerV4ByName, region, name, region)
 
     if summonerV4Request.status_code == 200:
         summonerV4Request = summonerV4Request.json()
-        leagueV4Request = limit(leagueV4, summonerV4Request, region).json()
+        leagueV4Request = limit(leagueV4, region, summonerV4Request, region).json()
         
         #Determine the index at which leagueV4Request has the most applicable ranked gamemode
         leagueV4Index = getLeagueV4Index(leagueV4Request)
@@ -271,11 +271,11 @@ def getSummoner(name, region):
 def getMatchHistory(summoner: Summoner):
     if len(summoner.matchHistory) == 0:
         superRegion = getSuperRegion(summoner.region)
-        matchIds = limit(matchV5ByPuuid, summoner.puuid, superRegion).json()
+        matchIds = limit(matchV5ByPuuid, superRegion, summoner.puuid, superRegion).json()
         matches = []
         
         for id in matchIds:
-            matchV5 = limit(matchV5ByMatchId, id, superRegion).json()
+            matchV5 = limit(matchV5ByMatchId, superRegion, id, superRegion).json()
             match = Match(matchV5)
             matches.append(match)
             
