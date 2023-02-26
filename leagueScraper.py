@@ -1,6 +1,6 @@
 import requests
 from urllib.parse import quote
-from cachetools import TTLCache
+from cachetools import cached, TTLCache
 import datetime as dt
 from rateLimiter import rateLimiter
 
@@ -240,7 +240,7 @@ def matchV5ByMatchId(matchId, superRegion):
 
 #Validates and URL encodes input, invokes API request methods, returns summoner object or appropriate error message
 #Caches result of function to summonerCache, if parameters used parameters, retrieve cooresponding object from cache
-#@cached(summonerCache)
+@cached(summonerCache)
 def getSummoner(name, region):
     name = quote(name, safe = ' ')
     
