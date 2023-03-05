@@ -357,12 +357,6 @@ def helpEmbed():
 
     return embed
 
-#log the timestamp, user input parameters, and exception callstack to textfile
-def logError(name, region):
-    exceptionDateTime = str(dt.datetime.now())
-    errorLog = open("errorLog.txt", "a")
-    errorLog.write(f"{exceptionDateTime}, name:{name}, region: {region}\n {traceback.format_exc()}\n")
-
 #Terminal output when bot is ready for use
 @client.event
 async def on_ready():
@@ -408,8 +402,6 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
         else:
             await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
     except Exception:
-        logError(name, region)
-
         if (deferredResponse):
             await interaction.followup.send("An unexpected error was encountered while processing this request", ephemeral = True)
         else:
@@ -447,8 +439,6 @@ async def matches(interaction: discord.Interaction, name: str, region: Region):
             await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
     #If any unhandled exceptions were encountered during the code's process, log the timestamp, input parameters, and callstack to textfile
     except Exception:
-        logError(name, region)
-
         #Followup if response was deferred, otherwise send sole response to user
         if (deferredResponse):
             await interaction.followup.send("An unexpected error was encountered while processing this request", ephemeral = True)
