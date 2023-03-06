@@ -59,6 +59,5 @@ Both dropdowns are still accessible to view the other team's data, the match ove
 
 Other information:
 - If an API request error occurs, users will get a message from LeagueScraper informing them of relevant information to error.
-- All exceptions that occur after a user command is called are logged with parameters, timestamp, and callstack in a textfile, and users are given an automatic error message from LeagueScraper.
 - Summoners are stored as objects, which are automatically saved to an LRU cache. Summoners expire from the cache if it reaches capacity, or if they have been in the cache for 30 minutes. New data on a Summoner can not be requested from Riot's API until they expire from the cache.
-- Turnoff command is restricted to privledged users. Only Discord accounts with their ID listed in the .env file can use this command.
+- Turnoff command is restricted to privledged users. Only Discord accounts with authorized IDs can use this command.
