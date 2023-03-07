@@ -4,7 +4,6 @@ from discord.ui import View
 import leagueScraper as ls
 import datetime as dt
 import calendar
-import traceback
 from enum import Enum
 from rateLimiter import RateLimitExceeded
 
