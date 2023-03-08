@@ -6,11 +6,11 @@ WORKDIR /app
 
 #install all non-native dependancies
 #text file command to install all dependancies
-RUN pip install requests
-RUN pip install cachetools
-RUN pip install datetime
-RUN pip install discord
-RUN pip install python-dotenv
+RUN pip install requests \
+    && pip install cachetools \
+    && pip install datetime \
+    && pip install discord \
+    && pip install python-dotenv
 
 #copy source files
 COPY bot.py .
