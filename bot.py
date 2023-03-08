@@ -366,7 +366,7 @@ async def on_ready():
 @tree.command(name = "turnoff", description = "turn off the bot")
 async def turnoff(interaction: discord.Interaction):
     if interaction.user.id == devId:
-        await interaction.response.send_message("Disconnecting", ephemeral = True)
+        print("Disconecting")
         await client.close()
     else:
         await interaction.response.send_message("Unauthorized command", ephemeral = True)
