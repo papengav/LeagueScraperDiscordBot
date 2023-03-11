@@ -6,6 +6,7 @@ import datetime as dt
 import calendar
 from enum import Enum
 from rateLimiter import RateLimitExceeded
+import traceback
 
 #Define client and tree
 #Tree holds all application commands
@@ -43,6 +44,7 @@ class Region(Enum):
 #Construct and return select menu for match history and matches
 class MatchHistorySelect(discord.ui.Select):
     def __init__(self, matchHistory: list[ls.Match], summoner: ls.Summoner):
+        ls.logger.info("Generating MatchHistorySelect")
         options = []
         value = 1
         self.matchHistory = matchHistory
@@ -67,8 +69,11 @@ class MatchHistorySelect(discord.ui.Select):
             value += 1
 
         super().__init__(options = options, placeholder = "Select a match")
+
+        ls.logger.info("MatchHistorySelect succesfully generated")
     
     async def callback(self, interaction: discord.Interaction):
+        ls.logger.info("MatchHistorySelect called back")
         iterator = 0
         
         for option in self.options:
@@ -76,11 +81,13 @@ class MatchHistorySelect(discord.ui.Select):
                 view = View(timeout = None)
 
                 if option.value == "Match History":
+                    ls.logger.info("MatchHistorySelect matchHistory selected")
                     embed = matchHistoryEmbed(self.matchHistory, self.summoner)
                     view.add_item(MatchHistorySelect(self.matchHistory, self.summoner))
 
                     await interaction.response.edit_message(embed = embed, view = view)
                 else:
+                    ls.logger.info(f"MatchHistorySelect match {iterator - 1} selected")
                     embed = matchEmbed(self.matchHistory[iterator - 1], self.summoner)
                     view.add_item(MatchHistorySelect(self.matchHistory, self.summoner))
                     view.add_item(MatchSpecSelect(self.matchHistory, self.matchHistory[iterator - 1], self.summoner))
@@ -92,6 +99,7 @@ class MatchHistorySelect(discord.ui.Select):
 #Construct and return select menu for match specific stats
 class MatchSpecSelect(discord.ui.Select):
     def __init__(self, matchHistory: list[ls.Match], match: ls.Match, summoner: ls.Summoner):
+        ls.logger.info("Generating MatchSpecSelect")
         options = []
         self.matchHistory = matchHistory
         self.match = match
@@ -102,11 +110,15 @@ class MatchSpecSelect(discord.ui.Select):
         options.append(discord.SelectOption(label = "Red", value = "redStats", description = "Stats"))
 
         super().__init__(options = options, placeholder = "Select match view")
+        
+        ls.logger.info("MatchSpecSelect succesfully generated")
 
     async def callback(self, interaction: discord.Interaction):
+        ls.logger.info("MatchSpecSelect called back")
         view = View(timeout = None)
 
         if self.values[0] == "Overview":
+            ls.logger.info("MatchSpecSelect Overview Selected")
             embed = matchEmbed(self.match, self.summoner)
             view.add_item(MatchHistorySelect(self.matchHistory, self.summoner))
             view.add_item(MatchSpecSelect(self.matchHistory, self.match, self.summoner))
@@ -114,6 +126,7 @@ class MatchSpecSelect(discord.ui.Select):
             await interaction.response.edit_message(embed = embed, view = view)
 
         elif self.values[0] == "blueStats":
+            ls.logger.info("MatchSpecSelect blueStats selected")
             embed = matchStatsEmbed(self.match, self.summoner, "blue")
             view.add_item(MatchHistorySelect(self.matchHistory, self.summoner))
             view.add_item(MatchSpecSelect(self.matchHistory, self.match, self.summoner))
@@ -121,6 +134,7 @@ class MatchSpecSelect(discord.ui.Select):
             await interaction.response.edit_message(embed = embed, view = view)
 
         elif self.values[0] == "redStats":
+            ls.logger.info("MatchSpecSelect redStats selected")
             embed = matchStatsEmbed(self.match, self.summoner, "red")
             view.add_item(MatchHistorySelect(self.matchHistory, self.summoner))
             view.add_item(MatchSpecSelect(self.matchHistory, self.match, self.summoner))
@@ -129,6 +143,8 @@ class MatchSpecSelect(discord.ui.Select):
 
 #Construct and return embed for match history
 def matchHistoryEmbed(matchHistory: list[ls.Match], summoner: ls.Summoner):
+    ls.logger.info("Generating matchHistory embed")
+
     embed = discord.Embed(
             title = summoner.name,
             colour = discord.Colour.blue()
@@ -164,16 +180,21 @@ def matchHistoryEmbed(matchHistory: list[ls.Match], summoner: ls.Summoner):
     refreshedEpoch = calendar.timegm(summoner.refreshed.timetuple())
     embed.add_field(name = "".ljust(45, '-'), value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoch}:f>", inline = False)
 
+    ls.logger.info("matchHistory embed succesfully generated")
     return embed
 
 #Construct and return embed for specific match overview
 def matchEmbed(match: ls.Match, summoner: ls.Summoner):
+    ls.logger.info("Generating match embed")
+
     for participant in match.participants:
         if participant["summonerName"] == summoner.name:
             if participant["win"] == True:
                 color = discord.Colour.green()
+                break
             else:
                 color = discord.Colour.red()
+                break
 
     #Unix timestamp given in miliseconds. // by 1000 to convert to seconds format for discord ui to handle with <:f##########:t>
     #double // floors division value
@@ -226,6 +247,7 @@ def matchEmbed(match: ls.Match, summoner: ls.Summoner):
 
     embed.set_footer(text = f"Region: {(summoner.region).upper()}")
 
+    ls.logger.info("Succesfully generated match embed")
     return embed
 
 #format strings used in matchStatsEmbed
@@ -233,6 +255,8 @@ def fData(data):
     return str(data).ljust(10, "\u1cbc") 
 
 def matchStatsEmbed(match: ls.Match, summoner: ls.Summoner, team: str):
+    ls.logger.info("Generating matchStats embed")
+
     for participant in match.participants:
         if participant["summonerName"] == summoner.name:
             if participant["win"] == True:
@@ -314,19 +338,20 @@ def matchStatsEmbed(match: ls.Match, summoner: ls.Summoner, team: str):
 
     embed.add_field(name = team.upper() + " TEAM", value = teamStr)
 
+    ls.logger.info("matchStats embed succesfully generated")
     return embed
 
 #Construct and return embed for summoner profile
 def profileEmbed(summoner: ls.Summoner):
+    ls.logger.info("Generating profile embed")
+
     rankedEmoji = discord.utils.get(client.emojis, name = summoner.tier)
 
     embed = discord.Embed(
         title = summoner.name,
         description = "Level " + str(summoner.level),
         colour = discord.Colour.blue()
-    )
-
-    
+    )    
 
     embed.set_thumbnail(url = f"http://ddragon.leagueoflegends.com/cdn/12.23.1/img/profileicon/{summoner.iconId}.png")
 
@@ -341,10 +366,12 @@ def profileEmbed(summoner: ls.Summoner):
     refreshedEpoch = calendar.timegm(summoner.refreshed.timetuple())
     embed.add_field(name = "".ljust(45, '-'), value = f"Region: {(summoner.region).upper()}\nRefreshed: <t:{refreshedEpoch}:f>", inline = False)
 
+    ls.logger.info("Profile embed succesfully generated")
     return embed
 
 #Construct and return embed with basic descriptions of the bots commands
 def helpEmbed():
+    ls.logger.info("Generating help embed")
     embed = discord.Embed(
         title = "Help Menu",
         colour = discord.Colour.blue()
@@ -354,31 +381,36 @@ def helpEmbed():
     embed.add_field(name = "/matches", value = "▸ Get a summoners 10 most recent matches.\n▸ Additional dropdowns allow inspection of individual matches, and more intricate data.", inline = False)
     embed.add_field(name = "Misc:", value = f"▸ Summoner profile and match data can only be refreshed every {int(ls.cacheTTL / 60)} minutes\n▸ DM Azzen#4343 with bug reports and suggestions", inline = False)
 
+    ls.logger.info("Help embed succesfully generated")
     return embed
 
 #Terminal output when bot is ready for use
 @client.event
 async def on_ready():
     await tree.sync()
-    print("Discord connection established")
+    print("Connected to Discord")
 
 #Turn off bot via discord command
 @tree.command(name = "turnoff", description = "turn off the bot")
 async def turnoff(interaction: discord.Interaction):
     if interaction.user.id == devId:
-        print("Disconecting")
+        print("Disconected from Discord")
         await client.close()
     else:
         await interaction.response.send_message("Unauthorized command", ephemeral = True)
 
 @tree.command(name = "help", description = "Get a description of LeagueScraper's functionality")
 async def help(interaction: discord.Interaction):
+    ls.logger.info("Help command called")
+    ls.logger.debug(f"Discord Interaction: {interaction}")
     embed = helpEmbed()
     await interaction.response.send_message(embed = embed)
 
 #Command to get a summoner's profile via LeagueScraper. Constructs and sends embed with returned data.
 @tree.command(name = "profile", description = "Get a summoner's profile")
 async def profile(interaction: discord.Interaction, name: str, region: Region):
+    ls.logger.info(f"Profile command called with params: name {name} and region {region}")
+    ls.logger.debug(f"Discord Interaction: {interaction}")
     try:
         deferredResponse = False
         response = ls.getSummoner(name, region.value)
@@ -396,11 +428,13 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
         else:
             await interaction.response.send_message(response, ephemeral = True)
     except RateLimitExceeded:
+        ls.logger.warning("Rate limit exceeded: region.value")
         if (deferredResponse):
             await interaction.followup.send("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
         else:
             await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
     except Exception:
+        ls.logger.warn("Excpetion occured: " + traceback.format_exc())
         if (deferredResponse):
             await interaction.followup.send("An unexpected error was encountered while processing this request", ephemeral = True)
         else:
@@ -409,6 +443,8 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
 #Command to get a summoner's match history via LeagueScraper. Constructs and sends embed and select menu to view individual match data.
 @tree.command(name = "matches", description = "Get a summoner's match history")
 async def matches(interaction: discord.Interaction, name: str, region: Region):
+    ls.logger.info(f"Profile command called with params: name {name} and region {region}")
+    ls.logger.debug(f"Discord Interaction: {interaction}")
     try:
         deferredResponse = False
         #summoner name case sensitive when testing for cache in leagueScraper.py
@@ -432,12 +468,14 @@ async def matches(interaction: discord.Interaction, name: str, region: Region):
             await interaction.response.send_message(response, ephemeral = True)
     #Output proper message if rate limit for region has been reached
     except RateLimitExceeded:
+        ls.logger.warning("Rate limit exceeded: region.value")
         if (deferredResponse):
             await interaction.followup.send("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
         else:
             await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
     #If any unhandled exceptions were encountered during the code's process, log the timestamp, input parameters, and callstack to textfile
     except Exception:
+        ls.logger.warn("Excpetion occured: " + traceback.format_exec())
         #Followup if response was deferred, otherwise send sole response to user
         if (deferredResponse):
             await interaction.followup.send("An unexpected error was encountered while processing this request", ephemeral = True)

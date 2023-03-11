@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 from datetime import timedelta
+import leagueScraper as ls
 
 class rateLimiter(object):
     def __init__(self):
@@ -20,6 +21,7 @@ class rateLimiter(object):
             if key == routingValue:
                 if datetime.now() > self.limitedValues[routingValue]:
                     self.limitedValues.pop(routingValue)
+                    ls.logger.info(f"{routingValue} popped from limitedValues")
                     break
                 else:
                     raise RateLimitExceeded
@@ -30,13 +32,17 @@ class rateLimiter(object):
         # If the rate limit is exceeded, and more calls are available sooner than maxWait, try again after refreshTime seconds have passed
         # Else add routingValue to limited values map, refresh time to map, and raise rate limit exception
         if response.status_code == 429:
+            ls.logger.info(f"Rate limiting {routingValue}")
             refreshTime = int(response.headers["Retry-After"])
+
             
             if refreshTime <= self.MAX_WAIT:
+                ls.logger.info(f"retrying {routingValue} in {refreshTime} seconds")
                 time.sleep(refreshTime)
                 response = func(*args, **kwargs)
             else:
                 self.limitedValues[routingValue] = datetime.now() + timedelta(seconds = refreshTime)
+                ls.logger.debug(f"rate limited values: {self.limitedValues}")
                 raise RateLimitExceeded
 
         return response
