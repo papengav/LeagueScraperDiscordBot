@@ -4,6 +4,7 @@ from cachetools import cached, TTLCache
 import datetime as dt
 from rateLimiter import rateLimiter
 import logging
+import time
 
 #Dev Key for Riot API
 #Retrieved from env and initialized in init
@@ -192,6 +193,16 @@ class Match:
             logger.info("Participant succesfully generated")
         logger.info("Match succesfully generated")
 
+#called if Riot's API responded with an internal server error.
+#Prod the server with static call every 60 seconds, if working allow application to continue
+def serverErrorHandler():
+    while True:
+        time.sleep(60)
+        serverProd = requests.get(f"https://na1.api.riotgames.com/lol/status/v4/platform-data?api_key={apiKey}")
+
+        if serverProd.status_code == 200:
+            break
+
 #Determine which Super Region an inputed region exists within
 def getSuperRegion(region):
     logger.info(f"Getting super region of {region}")
@@ -309,10 +320,10 @@ def getSummoner(name, region):
 
         response = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4RequestQueue, region = region)
     else:
-        response = summonerV4Request.json()["status"]["message"]
-
         if summonerV4Request.status_code != 404:
-            logger.warn(f"Unexpected request status code: {summonerV4Request.status_code}")
+            response = summonerV4Request.status_code
+        else:
+            response = summonerV4Request.json()["status"]["message"]
 
     logger.info("getSummoner succesfully ran")
     return response
