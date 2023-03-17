@@ -384,6 +384,14 @@ def helpEmbed():
     ls.logger.info("Help embed succesfully generated")
     return embed
 
+async def rateLimitHandler(interaction: discord.Interaction, deferredResponse: bool):
+    ls.logger.warning("Rate limit exceeded: region.value")
+
+    if (deferredResponse):
+        await interaction.followup.send("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
+    else:
+        await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
+
 #Terminal output when bot is ready for use
 @client.event
 async def on_ready():
@@ -413,6 +421,7 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
     ls.logger.debug(f"Discord Interaction: {interaction}")
     try:
         deferredResponse = False
+        name = name.upper()
         response = ls.getSummoner(name, region.value)
 
         #If request to Riot API encountered error, response will be an error message, not a summoner object
@@ -428,11 +437,7 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
         else:
             await interaction.response.send_message(response, ephemeral = True)
     except RateLimitExceeded:
-        ls.logger.warning("Rate limit exceeded: region.value")
-        if (deferredResponse):
-            await interaction.followup.send("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
-        else:
-            await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
+        rateLimitHandler(interaction, deferredResponse)
     except Exception:
         ls.logger.warn("Excpetion occured: " + traceback.format_exc())
         if (deferredResponse):
@@ -468,11 +473,7 @@ async def matches(interaction: discord.Interaction, name: str, region: Region):
             await interaction.response.send_message(response, ephemeral = True)
     #Output proper message if rate limit for region has been reached
     except RateLimitExceeded:
-        ls.logger.warning("Rate limit exceeded: region.value")
-        if (deferredResponse):
-            await interaction.followup.send("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
-        else:
-            await interaction.response.send_message("LeagueScraper is currently processing the maximum amount of requests for " + region.value + ". Please try again in a couple minutes.", ephemeral = True)
+        rateLimitHandler(interaction, deferredResponse)
     #If any unhandled exceptions were encountered during the code's process, log the timestamp, input parameters, and callstack to textfile
     except Exception:
         ls.logger.warn("Excpetion occured: " + traceback.format_exec())
