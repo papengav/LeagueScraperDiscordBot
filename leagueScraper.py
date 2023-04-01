@@ -19,7 +19,7 @@ seaSuperRegion = None
 #cache stores 100 summoners, summoners expire after 1800 seconds (30 minutes)
 #follows LRU model if cache is full and no summoners are expiring 
 cacheTTL = 1800
-summonerCache = TTLCache(maxsize = 100, ttl = cacheTTL)
+summonerCache = TTLCache(maxsize = 1000, ttl = cacheTTL)
 
 #Rate Limiter Object
 limit = rateLimiter()

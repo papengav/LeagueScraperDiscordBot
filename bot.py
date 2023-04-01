@@ -7,6 +7,8 @@ import calendar
 from enum import Enum
 from rateLimiter import RateLimitExceeded
 import traceback
+import os
+from dotenv import load_dotenv
 
 #Define client and tree
 #Tree holds all application commands
@@ -15,6 +17,10 @@ client = discord.Client(intents = intents)
 tree = app_commands.CommandTree(client)
 
 devId = None
+#devGuild required at runtime to create guild object for private commands only known method is to load dependancy with script
+load_dotenv()
+devGuildId = os.getenv('DEV_GUILD_ID')
+devGuild = discord.Object(id = devGuildId)
 
 def init(id, token):
     global devId
@@ -40,6 +46,13 @@ class Region(Enum):
     Russia = "ru"
     Turkey = "tr1"
     Oceania = "oc1"
+
+class LogLevel(Enum):
+    CRITICAL = 50
+    ERROR = 40
+    WARNING = 30
+    INFO = 20
+    DEBUG = 10
 
 #Construct and return select menu for match history and matches
 class MatchHistorySelect(discord.ui.Select):
@@ -419,17 +432,26 @@ async def exceptionHandler(interaction: discord.Interaction, deferredResponse: b
 #Terminal output when bot is ready for use
 @client.event
 async def on_ready():
+    #sync global commands
     await tree.sync()
+    #sync private commands
+    await tree.sync(guild = devGuild)
     print("Connected to Discord")
 
 #Turn off bot via discord command
-@tree.command(name = "turnoff", description = "turn off the bot")
+@tree.command(name = "turnoff", description = "turn off the bot", guild = devGuild)
 async def turnoff(interaction: discord.Interaction):
     if interaction.user.id == devId:
         print("Disconected from Discord")
+        await interaction.response.send_message("Disconnected from Discord")
         await client.close()
     else:
         await interaction.response.send_message("Unauthorized command", ephemeral = True)
+
+@tree.command(name = "loglevel", description = "Set terminal logging level", guild = devGuild)
+async def loglevel(interaction: discord.Interaction, level: LogLevel):
+    ls.logger.setLevel(level.value)
+    await interaction.response.send_message(f"Logging level adjusted to {level.value}")
 
 @tree.command(name = "help", description = "Get a description of LeagueScraper's functionality")
 async def help(interaction: discord.Interaction):
