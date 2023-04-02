@@ -320,10 +320,7 @@ def getSummoner(name, region):
 
         response = Summoner(summonerV4 = summonerV4Request, leagueV4 = leagueV4RequestQueue, region = region)
     else:
-        if summonerV4Request.status_code != 404:
-            response = summonerV4Request.status_code
-        else:
-            response = summonerV4Request.json()["status"]["message"]
+        response = summonerV4Request.status_code
 
     logger.info("getSummoner succesfully ran")
     return response

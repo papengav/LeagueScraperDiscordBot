@@ -408,13 +408,25 @@ async def rateLimitHandler(interaction: discord.Interaction, deferredResponse: b
 
 #Handle application response and output if unexpected exception occured
 async def exceptionHandler(interaction: discord.Interaction, deferredResponse: bool, statusCode):
+    ls.logger.info(f"exceptionHandler called with {interaction} {deferredResponse} and status code {statusCode}")
+
+    responded = False
+
     #Error was only API related if statusCode was int, otherwise parameter is irrelevant
-    if type(statusCode, int):
+    if isinstance(statusCode, int):
         #403 only occurs if API key is not provided, blacklisted, or path is invalid. Client should not make similar requests, and must be terminated if this occurs.
         #400 and 401 shouldn't occur during the natural process of the application
         if statusCode == 403:
             ls.logger.critical("Riot API responded to call with status code 403 - Forbidden API Key")
             client.close()
+        #404 occurs if summoner was not found in Riot's database
+        if statusCode == 404:
+            if deferredResponse:
+                await interaction.followup.send("Summoner not found, maybe check your spelling or region?")
+            else:
+                await interaction.response.send_message("Summoner not found, maybe check your spelling or region?")
+
+            responded = True
         #500 and 503 are both server side errors. To conserve resourses, users should not be able to send further commands until issue is remedied
         elif statusCode == 500 or statusCode == 503:
             ls.logger.warn("Riot API responded to call with code " + statusCode)
@@ -422,12 +434,13 @@ async def exceptionHandler(interaction: discord.Interaction, deferredResponse: b
             ls.serverErrorHandler()
         #If non-critical error followup to user if response was deferred, otherwise send normal response to user
         else:
-            ls.logger.warn("Excpetion occured: " + traceback.format_exec())
+            ls.logger.warn("Exception occured: " + traceback.format_exec())
 
-    if deferredResponse:
-        await interaction.followup.send("An unexpected error was encountered while processing this request", ephemeral = True)
-    else:
-        await interaction.response.send_message("An unexpected error was encountered while processing this request", ephemeral = True)
+    if not responded:
+        if deferredResponse:
+            await interaction.followup.send("An unexpected error was encountered while processing this request")
+        else:
+            await interaction.response.send_message("An unexpected error was encountered while processing this request", ephemeral = True)
 
 #Terminal output when bot is ready for use
 @client.event
@@ -481,18 +494,16 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
             await interaction.followup.send(embed = embed)
         #If response type was not a Summoner, an error calling the Riot API occurred, and response is the status code. 404 is summoner not found which is an expected response.
         else:
-            if response != 404:
-                raise Exception
-            await interaction.response.send_message(response, ephemeral = True)
+            raise Exception
     except RateLimitExceeded:
         rateLimitHandler(interaction, deferredResponse, region.value)
     except Exception:
-        exceptionHandler(interaction, deferredResponse, region.value, response)
+        await exceptionHandler(interaction, deferredResponse, response)
 
 #Command to get a summoner's match history via LeagueScraper. Constructs and sends embed and select menu to view individual match data.
 @tree.command(name = "matches", description = "Get a summoner's match history")
 async def matches(interaction: discord.Interaction, name: str, region: Region):
-    ls.logger.info(f"Profile command called with params: name {name} and region {region}")
+    ls.logger.info(f"matches command called with params: name {name} and region {region}")
     ls.logger.debug(f"Discord Interaction: {interaction}")
     try:
         deferredResponse = False
@@ -514,12 +525,10 @@ async def matches(interaction: discord.Interaction, name: str, region: Region):
 
             await interaction.followup.send(embed = embed, view = view)
         else:
-            if response != 404:
-                raise Exception
-            await interaction.response.send_message(response, ephemeral = True)
+            raise Exception
     #Output proper message if rate limit for region has been reached
     except RateLimitExceeded:
         rateLimitHandler(interaction, deferredResponse, region.value)
-    #If any unhandled exceptions were encountered during the code's process, log the timestamp, input parameters, and callstack to textfile
+    #If any unhandled exceptions were encountered during the code's process, call exception handler
     except Exception:
-        exceptionHandler(interaction, deferredResponse, region.value, response)
+        await exceptionHandler(interaction, deferredResponse, response)
