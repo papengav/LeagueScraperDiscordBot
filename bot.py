@@ -22,6 +22,13 @@ load_dotenv()
 devGuildId = os.getenv('DEV_GUILD_ID')
 devGuild = discord.Object(id = devGuildId)
 
+# Links to external resources, may change if domains are acquired
+inviteLink = "https://discord.com/api/oauth2/authorize?client_id=1044453194413129819&permissions=8&scope=bot%20applications.commands"
+webpageLink = "https://papengav.github.io/leaguescraper/"
+
+# Track the amount of times commands are getting called
+callCount = 0
+
 def init(id, token):
     global devId
     devId = int(id)
@@ -383,16 +390,19 @@ def profileEmbed(summoner: ls.Summoner):
     return embed
 
 #Construct and return embed with basic descriptions of the bots commands
-def helpEmbed():
-    ls.logger.info("Generating help embed")
+def lsEmbed():
+    ls.logger.info("Generating leaguescraper embed")
     embed = discord.Embed(
-        title = "Help Menu",
+        title = "LeagueScraper",
         colour = discord.Colour.blue()
     )
 
+    embed.add_field(name = "A bot to retrieve and analyze League of Legends Summoners, Champs, and more!", value = "---------------------------------------------", inline = False)
     embed.add_field(name = "/profile", value = "▸ Get a summoners profile.\n▸ Returns summoner's level, rank info, and winrate.", inline = False)
     embed.add_field(name = "/matches", value = "▸ Get a summoners 10 most recent matches.\n▸ Additional dropdowns allow inspection of individual matches, and more intricate data.", inline = False)
+    embed.add_field(name = "/invite", value = "▸ Get LeagueScraper's invite link", inline = False)
     embed.add_field(name = "Misc:", value = f"▸ Summoner profile and match data can only be refreshed every {int(ls.cacheTTL / 60)} minutes\n▸ DM Azzen#4343 with bug reports and suggestions", inline = False)
+    embed.add_field(name = "LeagueScraper website:", value = f"{webpageLink}\n▸Still in early development", inline = False)
 
     ls.logger.info("Help embed succesfully generated")
     return embed
@@ -466,18 +476,33 @@ async def loglevel(interaction: discord.Interaction, level: LogLevel):
     ls.logger.setLevel(level.value)
     await interaction.response.send_message(f"Logging level adjusted to {level.value}")
 
-@tree.command(name = "help", description = "Get a description of LeagueScraper's functionality")
-async def help(interaction: discord.Interaction):
-    ls.logger.info("Help command called")
+@tree.command(name = "calls", description = "return the amount of commands and API requests that have been made", guild = devGuild)
+async def calls(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Command Calls: {callCount}\nRiot API Calls: {ls.apiCalls}")
+
+@tree.command(name = "leaguescraper", description = "Get a description of LeagueScraper's functionality")
+async def leaguescraper(interaction: discord.Interaction):
+    ls.logger.info("leaguescraper command called")
     ls.logger.debug(f"Discord Interaction: {interaction}")
-    embed = helpEmbed()
+    global callCount
+    callCount += 1
+    embed = lsEmbed()
     await interaction.response.send_message(embed = embed)
+
+@tree.command(name = "invite", description = "Get the LeagueScraper's link")
+async def invite(interaction: discord.Interaction):
+    global callCount
+    callCount += 1
+    ls.logger.info("invite command called")
+    await interaction.response.send_message(inviteLink, ephemeral = True)
 
 #Command to get a summoner's profile via LeagueScraper. Constructs and sends embed with returned data.
 @tree.command(name = "profile", description = "Get a summoner's profile")
 async def profile(interaction: discord.Interaction, name: str, region: Region):
     ls.logger.info(f"Profile command called with params: name {name} and region {region}")
     ls.logger.debug(f"Discord Interaction: {interaction}")
+    global callCount
+    callCount += 1
     try:
         deferredResponse = False
         name = name.upper()
@@ -505,6 +530,8 @@ async def profile(interaction: discord.Interaction, name: str, region: Region):
 async def matches(interaction: discord.Interaction, name: str, region: Region):
     ls.logger.info(f"matches command called with params: name {name} and region {region}")
     ls.logger.debug(f"Discord Interaction: {interaction}")
+    global callCount
+    callCount += 1
     try:
         deferredResponse = False
         #summoner name case sensitive when testing for cache in leagueScraper.py

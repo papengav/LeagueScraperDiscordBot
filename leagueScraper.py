@@ -24,8 +24,12 @@ summonerCache = TTLCache(maxsize = 1000, ttl = cacheTTL)
 #Rate Limiter Object
 limit = rateLimiter()
 
-#Logging obejct
+#Logging object
 logger = None
+
+# Track the number of calls made to Riot's api, since rateLimiter wraps every api method, this variable will be incremented there to eliminate code redundancy
+# And in serverErrorHandler
+apiCalls = 0
 
 def init(key):
     global apiKey
@@ -199,6 +203,7 @@ def serverErrorHandler():
     while True:
         time.sleep(60)
         serverProd = requests.get(f"https://na1.api.riotgames.com/lol/status/v4/platform-data?api_key={apiKey}")
+        apiCalls += 1
 
         if serverProd.status_code == 200:
             break

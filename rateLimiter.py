@@ -28,6 +28,7 @@ class rateLimiter(object):
 
         #Send API Request
         response = func(*args, **kwargs)
+        ls.apiCalls += 1
 
         # If the rate limit is exceeded, and more calls are available sooner than maxWait, try again after refreshTime seconds have passed
         # Else add routingValue to limited values map, refresh time to map, and raise rate limit exception
@@ -40,6 +41,7 @@ class rateLimiter(object):
                 ls.logger.info(f"retrying {routingValue} in {refreshTime} seconds")
                 time.sleep(refreshTime)
                 response = func(*args, **kwargs)
+                ls.apiCalls += 1
             else:
                 self.limitedValues[routingValue] = datetime.now() + timedelta(seconds = refreshTime)
                 ls.logger.debug(f"rate limited values: {self.limitedValues}")
